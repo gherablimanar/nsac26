@@ -1,0 +1,90 @@
+.panel { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+/* A. Overview */
+.head { padding-bottom: 8px; }
+.titleRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.title { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 500; letter-spacing: -0.02em; }
+.close { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: -8px -8px 0 0; border: 0; border-radius: 12px; background: none; cursor: pointer; color: var(--ink-2); }
+.close:hover { background: rgba(16, 19, 26, 0.06); color: var(--ink); }
+.pill { display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 12px; padding: 4px 10px 4px 8px; border-radius: 999px; font-size: 13px; font-weight: 600; letter-spacing: 0.01em; border: 1px solid currentColor; }
+.lead { margin: 0 0 6px; font-size: 15px; max-width: 62ch; }
+.meta { margin: 0; font-size: 13px; color: var(--ink-2); }
+
+/* status text colours on the light panel */
+.nominal { color: var(--bm-nominal-ink); }
+.watch { color: var(--watch-ink); }
+.act { color: var(--act); }
+.unknown, .stale { color: var(--unknown); border-style: dashed; }
+
+.section { padding: 16px 0 6px; border-top: 1px solid var(--bm-rule); }
+.section h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.section p { margin: 0 0 8px; }
+.muted { color: var(--ink-2); font-size: 14px; }
+.note { font-size: 13px; color: var(--ink-2); }
+.sub { display: block; font-size: 11px; color: var(--ink-2); font-family: var(--sans); }
+.unit { color: var(--ink-2); font-size: 12px; }
+
+/* B. Indicators */
+.tableWrap { overflow-x: auto; margin: 0 -4px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { padding: 7px 4px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--bm-rule); }
+.table thead th { font-size: 11px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+.table tbody th { font-weight: 500; }
+.table tbody tr:last-child th, .table tbody tr:last-child td { border-bottom: 0; }
+.tag { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-2); background: rgba(16, 19, 26, 0.06); vertical-align: 1px; }
+.indStatus { white-space: nowrap; font-weight: 500; }
+.row_inside .indStatus { color: var(--bm-nominal-ink); }
+.row_outside .indStatus, .row_far .indStatus { color: var(--watch-ink); }
+.row_far .indStatus::before, .row_outside .indStatus::before { content: "▲ "; font-size: 9px; vertical-align: 1px; }
+.row_unknown .indStatus, .row_stale .indStatus, .row_no_baseline .indStatus { color: var(--unknown); }
+.row_missing th, .row_missing td { color: var(--unknown); font-style: italic; font-weight: 400; }
+
+/* C. Coupled risks */
+.risks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.risk { border: 1px solid var(--bm-rule); border-left: 3px solid currentColor; border-radius: 14px; overflow: hidden; color: var(--unknown); }
+.risk.act { color: var(--act); }
+.risk.watch { color: var(--watch-mark); }
+.risk.nominal { color: var(--bm-nominal); }
+.riskBtn { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 10px 12px; border: 0; background: none; text-align: left; cursor: pointer; color: var(--ink); transition: background 0.2s ease; }
+.riskBtn:hover { background: rgba(16, 19, 26, 0.035); }
+.riskBtn[aria-pressed="true"] { background: var(--bm-tiffany-wash); }
+.riskHead { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.riskName { font-weight: 600; font-size: 15px; }
+.level { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.act .level { color: var(--act); }
+.watch .level { color: var(--watch-ink); }
+.nominal .level { color: var(--bm-nominal-ink); }
+.mech { font-size: 13px; }
+.mech b { font-weight: 600; }
+.involves { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--bm-nominal-ink); font-weight: 500; }
+.riskMeta { margin: 0; padding: 0 12px 10px; display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); }
+.riskMeta div { display: grid; grid-template-columns: 88px 1fr; gap: 8px; }
+.riskMeta dt { font-weight: 600; }
+.riskMeta dd { margin: 0; color: var(--ink); }
+.quiet { margin-top: 10px; font-size: 13px; }
+.quiet summary { cursor: pointer; color: var(--ink-2); padding: 6px 0; }
+.quiet .risks { margin-top: 6px; }
+
+/* E. Action card */
+.action { border-radius: 16px; padding: 14px 16px; background: var(--bm-action-bg); border: 1px solid var(--bm-rule); margin-bottom: 10px; color: var(--ink); }
+.action.act { background: var(--bm-act-wash); border-color: var(--bm-act-line); }
+.action.watch { background: var(--bm-watch-wash); border-color: var(--bm-watch-line); }
+.actionFor { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.actionList { margin: 0; display: grid; gap: 8px; font-size: 14px; }
+.actionList div { display: grid; grid-template-columns: 86px 1fr; gap: 8px; }
+.actionList dt { font-weight: 600; color: var(--ink-2); font-size: 13px; }
+.actionList dd { margin: 0; }
+.what { font-weight: 600; margin: 0; }
+.unsure { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--bm-rule); font-size: 13px; color: var(--ink-2); }
+.unsure h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.unsure ul { margin: 0; padding-left: 18px; }
+
+/* F. Evidence */
+.sources { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink-2); }
+.sources li { display: flex; align-items: center; gap: 6px; }
+
+.disclaimer { margin: 12px 0 0; font-size: 12px; color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .riskBtn { transition: none; }
+}
