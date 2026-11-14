@@ -8,7 +8,7 @@ import card from "../components/Card.module.css";
 import { PageHero } from "../components/PageHero";
 import s from "./DailyLog.module.css";
 
-type Props = { crewId: string; day: number };
+type Props = { crewId: string; day: number; quickMood?: number | null; onSaved?: () => void };
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(v)));
 const FIVE = [1, 2, 3, 4, 5];
@@ -30,13 +30,13 @@ function Scale({ name, legend, value, onChange }: { name: string; legend: string
   );
 }
 
-export function DailyLog({ crewId, day }: Props) {
+export function DailyLog({ crewId, day, quickMood, onSaved }: Props) {
   const today = readingOn(crewId, day);
   const drift = useMemo(() => driftOn(crewId, day), [crewId, day]);
 
   const [fluid, setFluid] = useState<number[]>(() => [today?.fluid_intake_ml ?? 0]);
   const [urine, setUrine] = useState(() => clamp(today?.urine_color_1to8 ?? 3, 1, 8));
-  const [mood, setMood] = useState(() => clamp(today?.mood_1to5 ?? 3, 1, 5));
+  const [mood, setMood] = useState(() => quickMood ?? clamp(today?.mood_1to5 ?? 3, 1, 5));
   const [stress, setStress] = useState(() => clamp(today?.stress_1to5 ?? 3, 1, 5));
   const [sleep, setSleep] = useState(() => (today?.sleep_hours ?? 7).toFixed(2).replace(/0$/, ""));
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -107,7 +107,7 @@ export function DailyLog({ crewId, day }: Props) {
           </fieldset>
 
           <div className={s.save}>
-            <button type="button" className={s.cta} onClick={() => setSaved(true)}>Save check-in</button>
+            <button type="button" className={s.cta} onClick={() => { setSaved(true); onSaved?.(); }}>Save check-in</button>
             {saved && <span className={s.saved} role="status">Saved for Day {day}</span>}
           </div>
         </section>
