@@ -4,7 +4,7 @@ import { TopBar } from "./components/TopBar";
 import { DEMO_DAY, MISSION_PROFILE, SIM, crewById } from "./data/crew.ts";
 import { Overview } from "./pages/Overview";
 import { RiskBanner } from "./components/RiskBanner";
-import { buildOverview } from "./ui/overviewData.ts";
+import { buildOverview, easedToday } from "./ui/overviewData.ts";
 import { Health } from "./pages/Health";
 import { DailyLog } from "./pages/DailyLog";
 import { Assistant } from "./pages/Assistant";
@@ -36,7 +36,10 @@ export default function App() {
   const openHealth = (id: RegionId) => { setSystem(id); setPage("health"); };
   const navigate = (p: Page) => { setUrgent(false); setPage(p); };
   const risk = useMemo(() => buildOverview(crewId, DEMO_DAY).risk, [crewId]);
-  const actRisk = risk?.level === "act" ? risk : null;
+  const [planDone, setPlanDone] = useState<Record<string, string[]>>({});
+  const done = planDone[crewId] ?? [];
+  const setDone = (ids: string[]) => setPlanDone((m) => ({ ...m, [crewId]: ids }));
+  const actRisk = risk?.level === "act" && !easedToday(risk, done) ? risk : null;
 
   return (
     <>
@@ -45,7 +48,7 @@ export default function App() {
         onSelect={setCrewId} onUrgentHelp={() => { setUrgent(true); setPage("assistant"); }} />
       <main key={crewId} className={s.main}>
         {actRisk && page !== "overview" && <RiskBanner risk={actRisk} onOpen={() => navigate("overview")} />}
-        {page === "overview" && <Overview key={crewId} crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} />}
+        {page === "overview" && <Overview key={crewId} crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} done={done} onDone={setDone} />}
         {page === "settings" && <Settings look={look} onLook={setLook} />}
         {page === "health" && <Health crewId={crewId} day={DEMO_DAY} selected={system} onSelect={setSystem} />}
         {page === "log" && <DailyLog crewId={crewId} day={DEMO_DAY} />}

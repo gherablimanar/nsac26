@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { ArrowLeft, CaretRight, ChartLineUp, Check, ClockCounterClockwise, Microphone, RocketLaunch, ShieldCheck, Stethoscope } from "@phosphor-icons/react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { ArrowLeft, CaretRight, ChartLineUp, Check, ClockCounterClockwise, FileText, Microphone, Paperclip, X, RocketLaunch, ShieldCheck, Stethoscope } from "@phosphor-icons/react";
 import card from "../components/Card.module.css";
 import { HaloMark } from "../components/HaloMark";
 import { PageHero } from "../components/PageHero";
@@ -57,6 +57,20 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   const [text, setText] = useState("");
   const area = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  // The conversation card runs to the bottom of the screen: tiles at the top, the typing bar at the bottom
+  const convo = useRef<HTMLElement>(null);
+  const [convoH, setConvoH] = useState<number>();
+  useLayoutEffect(() => {
+    const fit = () => {
+      let y = 0;
+      for (let n: HTMLElement | null = convo.current; n; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+      setConvoH(Math.max(480, window.innerHeight - y - 24));
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [mode]);
   const timers = useRef<number[]>([]);
 
   useEffect(() => { setMessages([]); setMode(urgent ? "chat" : "start"); }, [crewId, urgent]);
@@ -65,8 +79,9 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   useEffect(() => { const el = area.current; if (el) el.scrollTop = el.scrollHeight; }, [messages]);
 
   const send = (raw: string) => {
-    const t = raw.trim();
+    const t = [raw.trim(), file ? `Attached: ${file.name}` : ""].filter(Boolean).join("\n");
     if (!t) return;
+    setFile(null);
     setMode("chat");
     setMessages((m) => [...m, userMsg(t)]);
     setText("");
@@ -145,7 +160,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
         title={<span className={s.heroTitle}><HaloMark size={48} className={s.heroMark} />{mode === "start" ? `How are you feeling, ${crewById(crewId).name.split(" ").slice(-2)[0]}?` : "HALO is listening"}</span>}
         line={mode === "start" ? status : "Offline on board. Emergency rules run before the AI."} />
       <div className={s.grid}>
-        <section className={`${card.card} ${s.convo} ${mode === "chat" || urgent ? s.chatting : ""}`} aria-label="Conversation with HALO">
+        <section ref={convo} className={`${card.card} ${s.convo}`} style={{ height: convoH }} aria-label="Conversation with HALO">
           <div className={s.messages} ref={area}>
             {mode === "start" && (
               <div className={s.start}>
@@ -180,7 +195,15 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
               </div>
             ))}
           </div>
+          {file && (
+            <div className={s.fileChip}>
+              <FileText size={16} />{file.name}
+              <button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFile(null)}><X size={14} weight="bold" /></button>
+            </div>
+          )}
           <div className={s.composer}>
+            <input id="assistant-file" type="file" className={s.vh} accept="image/*,.pdf,.txt,.csv" onChange={(e) => { setFile(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+            <label htmlFor="assistant-file" className={s.attach}><Paperclip size={18} />Upload file</label>
             <label htmlFor="assistant-input" className={s.vh}>Describe how you feel</label>
             <textarea id="assistant-input" ref={input} className={s.input} rows={1} placeholder={mode === "start" ? "Or describe it in your own words" : "Describe how you feel"}
               value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} />

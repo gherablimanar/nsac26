@@ -20,7 +20,10 @@
 
 .layout { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; margin-top: 16px; }
 .full .layout { grid-template-columns: 150px 1fr; }
-.figure { min-width: 0; animation: fade var(--enter) ease-out both; }
+/* Front/Back: the body turns around (keyed by view, so each switch replays it) */
+.figure { min-width: 0; perspective: 700px; }
+.figure > svg { transform-origin: 50% 50%; animation: turn 0.32s var(--ease-out) both; }
+@keyframes turn { from { opacity: 0; transform: rotateY(-75deg) scale(0.96); } 60% { opacity: 1; } }
 
 .list { list-style: none; margin: 0; padding: 0; }
 .row { width: 100%; display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border: 0; background: none; font-size: 14px; text-align: left; cursor: pointer; }

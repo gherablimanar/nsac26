@@ -54,7 +54,7 @@ export function BodyCard({ crewId, day, size = "compact", selected, onSelect, on
       <Segmented label="Body view" value={view} onChange={setView} options={[{ id: "anterior", label: "Front" }, { id: "posterior", label: "Back" }]} />
       <div className={s.layout}>
         <div key={view} className={s.figure}>
-          <BodyFigure view={view} model={model} selected={selected ?? null} linked={null} onSelect={(id) => onSelect(id)} />
+          <BodyFigure view={view} model={model} selected={selected ?? null} linked={null} onSelect={(id) => onSelect(id)} hidden={["whole_body"]} />
         </div>
         <div className={s.side}>
           {size === "full" ? rows(regions) : (

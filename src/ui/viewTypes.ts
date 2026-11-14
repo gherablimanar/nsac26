@@ -25,7 +25,8 @@ export type PriorityRisk = {
   systemIds: BodySystemId[]; // body systems this risk covers
 };
 
-export type PlanStep = { id: string; label: string; when: string; cta: string };
+/** `clears`: once every clearing step is done, today's Act warning steps down to Watch (the readings update tomorrow) */
+export type PlanStep = { id: string; label: string; when: string; cta: string; clears?: boolean };
 
 export type ChartPoint = { day: number; value: number; band: [number, number]; out: number | null };
 

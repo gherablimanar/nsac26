@@ -15,6 +15,7 @@ type Props = {
   selected: RegionId | null;
   linked: Set<RegionId> | null; // regions of the highlighted coupled risk (null = no highlight)
   onSelect: (id: RegionId, el: SVGGElement) => void;
+  hidden?: RegionId[]; // regions not drawn on the figure (still listed elsewhere)
 };
 
 /** Status badge: a shape per status, so colour is never the only cue. */
@@ -43,10 +44,10 @@ function Badge({ status, x, y }: { status: RegionStatus; x: number; y: number })
   return null;
 }
 
-export function BodyFigure({ view, model, selected, linked, onSelect }: Props) {
+export function BodyFigure({ view, model, selected, linked, onSelect, hidden = [] }: Props) {
   const uid = useId().replace(/:/g, "");
   const hatch = `bm-hatch-${uid}`;
-  const arts = ART_BY_VIEW[view];
+  const arts = ART_BY_VIEW[view].filter((a) => !hidden.includes(a.id));
   const ids = ORDER.filter((id) => arts.some((a) => a.id === id));
   const [hover, setHover] = useState<RegionId | null>(null);
   const [focus, setFocus] = useState<RegionId | null>(null);
@@ -96,9 +97,11 @@ export function BodyFigure({ view, model, selected, linked, onSelect }: Props) {
       </defs>
 
       {/* back half of the HALO ring, behind the figure */}
-      <g className={regionClass("whole_body")} aria-hidden="true">
-        <path d={RING_BACK} className="line ring back" />
-      </g>
+      {!hidden.includes("whole_body") && (
+        <g className={regionClass("whole_body")} aria-hidden="true">
+          <path d={RING_BACK} className="line ring back" />
+        </g>
+      )}
 
       <g className={s.silhouette} aria-hidden="true">
         <ellipse {...HEAD} />

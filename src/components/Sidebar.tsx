@@ -43,7 +43,6 @@ export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page
           onChange={(i) => onNavigate(ITEMS[i].id)}
           items={ITEMS.map(({ label, icon: I }) => ({ label, icon: <I size={20} />, fx: "pop" as const }))}
         />
-        <p className={s.proto}>Prototype, not a medical device</p>
       </aside>
     </LiquidGlass>
   );

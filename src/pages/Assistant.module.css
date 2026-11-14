@@ -2,9 +2,8 @@
 .heroTitle { display: inline-flex; align-items: center; gap: 16px; }
 .heroMark { flex: none; color: var(--ink); }
 .grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, 360px); gap: 16px; align-items: start; justify-content: start; }
-/* Start: the card hugs the tiles and the input. Chatting: it takes the screen height and scrolls */
-.convo.chatting { height: calc(100vh - 340px); min-height: 480px; }
-.convo { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+/* Height is set from the page so the card ends at the bottom of the screen */
+.convo { min-height: 480px; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .messages { flex: 1; overflow: auto; padding: 24px 26px; display: flex; flex-direction: column; gap: 24px; }
 .user, .halo { animation: lift var(--enter) var(--ease-out) both; }
 .user { align-self: flex-end; max-width: 70%; background: var(--accent-soft); border-radius: 18px; padding: 12px 16px; }
@@ -36,6 +35,15 @@
 .input { flex: 1; min-width: 0; resize: none; field-sizing: content; min-height: 50px; max-height: 120px; padding: 13px 16px; border: 1px solid rgba(16,19,26,0.14); border-radius: 16px; background: var(--card); color: var(--ink); font: inherit; }
 .input::placeholder { color: var(--ink-2); }
 .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+/* Upload file: a quiet labelled button at the left of the typing bar (the real file input is visually hidden) */
+.attach { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 50px; padding: 0 14px; border: 1px solid rgba(16, 19, 26, 0.14); border-radius: 16px; color: var(--ink); font-weight: 500; cursor: pointer; transition: border-color 0.16s ease-out, color 0.16s ease-out; }
+.attach:hover { border-color: var(--accent); color: var(--accent); }
+.attach svg { color: var(--accent); }
+input[type="file"]:focus-visible + .attach { outline: 2px solid var(--accent); outline-offset: 3px; }
+.fileChip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; margin: 0 20px; padding: 6px 8px 6px 12px; border-radius: 12px; background: var(--accent-soft); font-size: 14px; animation: lift var(--enter) var(--ease-out) both; }
+.fileChip svg { color: var(--accent); }
+.fileChip button { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
+.fileChip button:hover { background: rgba(193, 68, 14, 0.12); }
 .mic { width: 44px; height: 50px; border: 0; background: transparent; color: var(--ink-2); border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .mic:hover { background: var(--page); color: var(--accent); }
 .cta { height: 50px; padding: 0 24px; border: 0; border-radius: 16px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 500; cursor: pointer; }

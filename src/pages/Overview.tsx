@@ -10,9 +10,9 @@ import { buildOverview } from "../ui/overviewData.ts";
 import s from "./Overview.module.css";
 
 
-type Props = { crewId: string; day: number; delay: string | null; onOpenHealth: (id: RegionId) => void };
+type Props = { crewId: string; day: number; delay: string | null; onOpenHealth: (id: RegionId) => void; done: string[]; onDone: (ids: string[]) => void };
 
-export function Overview({ crewId, day, delay, onOpenHealth }: Props) {
+export function Overview({ crewId, day, delay, onOpenHealth, done, onDone }: Props) {
   const m = useMemo(() => buildOverview(crewId, day), [crewId, day]);
   const next = m.tasks.find((t) => !t.done);
   const flagged = useMemo(() => {
@@ -21,7 +21,7 @@ export function Overview({ crewId, day, delay, onOpenHealth }: Props) {
   }, [crewId, day]);
   return (
     <>
-      <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next}
+      <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next} done={done} onDone={onDone}
         flagged={flagged} />
       <div className={s.below}>
         <TodayTasks key={crewId} initial={m.tasks} />
