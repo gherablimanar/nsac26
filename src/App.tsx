@@ -3,7 +3,12 @@ import { Sidebar, type Page } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { DEMO_DAY, MISSION_PROFILE, SIM, crewById } from "./data/crew.ts";
 import { Field, Overview, overviewState } from "./pages/Overview";
-import { Placeholder } from "./pages/Placeholder";
+import { Health } from "./pages/Health";
+import { DailyLog } from "./pages/DailyLog";
+import { Assistant } from "./pages/Assistant";
+import { Mission } from "./pages/Mission";
+import { Medicines } from "./pages/Medicines";
+import { Evidence } from "./pages/Evidence";
 import { Settings, type Look } from "./pages/Settings";
 import type { BodySystemId } from "./ui/viewTypes.ts";
 import s from "./App.module.css";
@@ -19,6 +24,7 @@ export default function App() {
   const [crewId, setCrewId] = useState("C2"); // demo story: Marco Ricci
   const [look, setLook] = useState<Look>(readLook);
   const [system, setSystem] = useState<BodySystemId | null>(null);
+  const [urgent, setUrgent] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.look = look;
@@ -26,22 +32,23 @@ export default function App() {
   }, [look]);
 
   const openHealth = (id: BodySystemId) => { setSystem(id); setPage("health"); };
+  const navigate = (p: Page) => { setUrgent(false); setPage(p); };
 
   return (
     <>
       {page === "overview" && <Field state={overviewState(crewId, DEMO_DAY)} />}
-      <Sidebar page={page} onNavigate={setPage} />
+      <Sidebar page={page} onNavigate={navigate} />
       <TopBar profile={MISSION_PROFILE} day={DEMO_DAY} crew={SIM.crew} selected={crewById(crewId)}
-        onSelect={setCrewId} onUrgentHelp={() => setPage("assistant")} />
+        onSelect={setCrewId} onUrgentHelp={() => { setUrgent(true); setPage("assistant"); }} />
       <main className={s.main}>
         {page === "overview" && <Overview crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} />}
         {page === "settings" && <Settings look={look} onLook={setLook} />}
-        {page === "health" && <Placeholder title="Health" note={`Details for ${system ?? "every body system"} go here: trends against your normal band, with why each reading matters in space.`} />}
-        {page === "log" && <Placeholder title="Daily Log" note="Check-in forms for fluid, urine colour, mood and the reaction test go here." />}
-        {page === "assistant" && <Placeholder title="Assistant" note="The AI medical officer goes here. Red-flag rules run first; it never gives drug doses." />}
-        {page === "mission" && <Placeholder title="Mission" note="Mission profile, radiation dose and the readiness gate before a spacewalk go here." />}
-        {page === "medicines" && <Placeholder title="Medicines" note="The flight surgeon's dosing schedule and the potency forecast go here." />}
-        {page === "evidence" && <Placeholder title="Evidence" note="The NASA sources behind every rule and signal go here." />}
+        {page === "health" && <Health crewId={crewId} day={DEMO_DAY} selected={system} onSelect={setSystem} />}
+        {page === "log" && <DailyLog crewId={crewId} day={DEMO_DAY} />}
+        {page === "assistant" && <Assistant crewId={crewId} day={DEMO_DAY} delay={DELAY} urgent={urgent} />}
+        {page === "mission" && <Mission crewId={crewId} day={DEMO_DAY} />}
+        {page === "medicines" && <Medicines crewId={crewId} day={DEMO_DAY} />}
+        {page === "evidence" && <Evidence />}
       </main>
     </>
   );

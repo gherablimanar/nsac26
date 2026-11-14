@@ -12,7 +12,7 @@
   flex-direction: column;
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 12px 28px; font-weight: 600; font-size: 18px; letter-spacing: 0.02em; }
-.brand svg { width: 26px; height: 14px; }
+.brand svg { width: 32px; height: 32px; flex: none; }
 
 /* The vertical water nav fills the sidebar; Evidence (7th item) is pushed to the bottom */
 .water { flex: 1; min-height: 0; }

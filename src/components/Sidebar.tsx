@@ -25,7 +25,14 @@ export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page
     <LiquidGlass asChild material="regular" refraction={28}>
       <aside className={s.side}>
         <div className={s.brand}>
-          <svg viewBox="0 0 26 14" fill="none" aria-hidden="true"><ellipse cx="13" cy="7" rx="11.5" ry="5" stroke="currentColor" strokeWidth="2" /></svg>
+          {/* Mars inside its halo: the ring's back half sits behind the planet, the front half crosses it */}
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <path d="M14 66 A50 18 -18 0 1 106 54" fill="none" stroke="currentColor" strokeWidth="6" />
+            <circle cx="60" cy="60" r="30" fill="var(--mars)" />
+            <path d="M36 52 Q60 46 84 58" fill="none" stroke="var(--mars-deep)" strokeWidth="6" strokeLinecap="round" />
+            <circle cx="70" cy="74" r="4.5" fill="var(--mars-deep)" />
+            <path d="M106 54 A50 18 -18 0 1 14 66" fill="none" stroke="currentColor" strokeWidth="6" />
+          </svg>
           <span>HALO</span>
         </div>
         {/* Water drop slides between sections; bare = no second glass inside the glass sidebar */}

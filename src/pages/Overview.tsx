@@ -24,7 +24,8 @@ export function Overview({ crewId, day, delay, onOpenHealth }: Props) {
       {m.risk && <p className={s.others}>Other linked risks: {m.risk.otherRisks.join(", ")}. All inside your normal range.</p>}
       <div className={s.below}>
         <TodayTasks key={crewId} initial={m.tasks} />
-        <BodyMap systems={m.systems} onSelect={onOpenHealth} />
+        <BodyMap systems={m.systems} onSelect={onOpenHealth}
+          onOpen={() => onOpenHealth(m.systems.find((x) => x.status === "watch" || x.status === "act")?.id ?? "heart")} />
         <LatestReadings readings={m.readings} onAll={() => onOpenHealth("heart")} />
       </div>
     </>

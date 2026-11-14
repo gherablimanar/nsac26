@@ -1,10 +1,11 @@
 // Builds what the Overview shows for one astronaut on one mission day.
 // Bands and drift come from the engine (src/engine/baseline.ts). The priority risk text and the
 // task list are MOCK until the coupling rules in src/rules exist.
-import { bandCentreAt, computeBaselines, computeDrift, type Drift } from "../engine/baseline.ts";
+import { bandCentreAt, computeBaselines, computeDrift } from "../engine/baseline.ts";
 import { SIGNAL_BY_KEY } from "../engine/signals.ts";
 import { historyOf, readingOn } from "../data/crew.ts";
-import type { BodySystem, LinkedSeries, OverviewModel, PriorityRisk, ReadingSummary, SystemStatus, Task } from "./viewTypes.ts";
+import type { BodySystem, LinkedSeries, OverviewModel, PriorityRisk, ReadingSummary, Task } from "./viewTypes.ts";
+import { SYSTEMS, systemStatus } from "./systems.ts";
 
 // MOCK: what the kidney-stone coupling rule (brief p. 7, Siew et al. 2024) would return for Marco.
 const RISKS: Record<string, PriorityRisk> = {
@@ -39,20 +40,6 @@ function display(key: string, v: number): { now: string; unit: string } {
   }
 }
 
-// Which signals belong to which body system (presentation grouping, see note in viewTypes.ts).
-const SYSTEM_SIGNALS: Record<BodySystem["id"], string[]> = {
-  mind: ["sleep_hours", "sleep_debt_h", "mood_1to5", "stress_1to5", "reaction_time_ms", "memory_score"],
-  eyes: [], // no eye readings in the simulator yet: shows as unknown
-  heart: ["heart_rate", "bp_sys", "bp_dia", "spo2"],
-  kidneys: ["fluid_intake_ml", "urine_color_1to8", "sodium_mg"],
-  musculo: ["bone_density_pct", "bone_resorption_index", "calf_volume_pct", "body_mass_kg"],
-};
-const SYSTEM_LABEL: Record<BodySystem["id"], string> = {
-  mind: "Sleep and mind", eyes: "Eyes", heart: "Heart and blood", kidneys: "Kidneys", musculo: "Bones and muscle",
-};
-
-const statusOf = (d?: Drift): SystemStatus => (!d ? "unknown" : d.status === "inside band" ? "normal" : "watch");
-
 export function buildOverview(crewId: string, day: number): OverviewModel {
   const history = historyOf(crewId);
   const bands = computeBaselines(history);
@@ -80,17 +67,11 @@ export function buildOverview(crewId: string, day: number): OverviewModel {
     return { key, label: SHORT_LABEL[key] ?? SIGNAL_BY_KEY[key]?.label ?? key, ...display(key, last.value), outNow: last.isOut, points };
   });
 
-  const systems: BodySystem[] = (Object.keys(SYSTEM_SIGNALS) as BodySystem["id"][]).map((id) => {
-    const keys = SYSTEM_SIGNALS[id];
-    if (keys.length === 0) return { id, label: SYSTEM_LABEL[id], status: "unknown", detail: "No reading yet" };
-    const statuses = keys.map((k) => statusOf(drift[k]));
-    const status: SystemStatus = statuses.includes("watch") ? "watch" : statuses.every((s) => s === "unknown") ? "unknown" : "normal";
-    return { id, label: SYSTEM_LABEL[id], status, detail: status === "watch" ? "Watch" : status === "unknown" ? "No reading yet" : "Normal" };
+  const statusText = { normal: "Normal", watch: "Watch", act: "Act", unknown: "No reading yet" } as const;
+  const systems: BodySystem[] = SYSTEMS.map((def) => {
+    const status = systemStatus(def, drift);
+    return { id: def.id, label: def.label, status, detail: statusText[status] };
   });
-
-  // Whatever needs attention comes first; missing data last
-  const rank = { act: 0, watch: 1, normal: 2, unknown: 3 } as const;
-  systems.sort((a, b) => rank[a.status] - rank[b.status]);
 
   const today = readingOn(crewId, day);
   const range = (k: string, digits = 0) => `${drift[k].bandLo.toFixed(digits)}-${drift[k].bandHi.toFixed(digits)}`;

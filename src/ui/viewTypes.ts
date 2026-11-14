@@ -30,7 +30,7 @@ export type LinkedSeries = {
 
 export type Task = { id: string; label: string; when?: string; done: boolean };
 
-export type BodySystemId = "mind" | "eyes" | "heart" | "kidneys" | "musculo";
+export type BodySystemId = "mind" | "eyes" | "lungs" | "heart" | "kidneys" | "gut" | "bones" | "muscles";
 
 export type BodySystem = { id: BodySystemId; label: string; status: SystemStatus; detail: string };
 
