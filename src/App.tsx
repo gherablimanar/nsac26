@@ -11,6 +11,8 @@ import { Medicines } from "./pages/Medicines";
 import { Evidence } from "./pages/Evidence";
 import { Settings, type Look } from "./pages/Settings";
 import type { BodySystemId } from "./ui/viewTypes.ts";
+import { BodyMapPage } from "./bodymap/BodyMapPage";
+import { BODY_MAP_PAGE } from "./bodymap/nav.ts";
 import s from "./App.module.css";
 
 const DELAY = MISSION_PROFILE === "mars_transit" ? "18 min" : MISSION_PROFILE === "moon" ? "1 s" : null;
@@ -49,6 +51,7 @@ export default function App() {
         {page === "mission" && <Mission crewId={crewId} day={DEMO_DAY} />}
         {page === "medicines" && <Medicines crewId={crewId} day={DEMO_DAY} />}
         {page === "evidence" && <Evidence />}
+        {page === BODY_MAP_PAGE && <BodyMapPage crewId={crewId} day={DEMO_DAY} />}
       </main>
     </>
   );
