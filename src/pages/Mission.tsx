@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Segmented } from "../components/Segmented";
+import { More } from "../components/More";
+import { PageHero } from "../components/PageHero";
 import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
 import card from "../components/Card.module.css";
 import { MISSION_PROFILE, historyOf, readingOn } from "../data/crew";
@@ -35,7 +37,7 @@ export function Mission({ crewId, day }: Props) {
   const fine = inputs.filter((i) => i.gate === "Go").map((i) => i.label.split(" ")[0].toLowerCase().replace("reaction", "reaction time"));
   const lowerCase = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
   const reason = bad.length === 0
-    ? "Sleep, reaction time and radiation are all inside your normal."
+    ? "" // the three Go rows already say it
     : `${bad.map((i) => (i.key === "rad" && storm ? "Radiation is high because of the solar storm" : `${i.label.replace(" last night", "").replace(" today", "")} is ${i.phrase} your normal`)).join("; ")}${fine.length ? `; ${lowerCase(fine.join(" and "))} ${fine.length > 1 ? "are" : "is"} fine` : ""}.`;
 
   const eva = history.find((r) => r.eva_scheduled && r.day >= day);
@@ -54,20 +56,14 @@ export function Mission({ crewId, day }: Props) {
 
   return (
     <>
-      <div className={s.top}>
-        <div>
-          <h1 className={s.title}>Mission</h1>
-          <p className={s.sub}>Readiness, radiation and your link to Earth.</p>
-        </div>
-        <Segmented label="Mission profile" value={profile} onChange={setProfile}
-          options={PROFILES.map((x) => ({ id: x.id, label: x.label }))} />
-      </div>
+      <PageHero page="Mission" state={overall === "Go" ? "normal" : overall === "No-go" ? "act" : "watch"}
+        title={eva ? `${overall === "Go" ? "Go" : overall === "No-go" ? "No-go" : "Go with caution"} for your spacewalk` : `Readiness today: ${overall}`}
+        line={`${evaLine}.${reason ? ` ${reason}` : ""}`}
+        aside={<Segmented label="Mission profile" value={profile} onChange={setProfile} options={PROFILES.map((x) => ({ id: x.id, label: x.label }))} />} />
 
-      <div className={s.grid}>
+      <div key={profile} className={s.grid}>
         <section className={`${card.card} ${s.hero}`} aria-labelledby="gate-h">
           <div className={card.head}><h2 id="gate-h">{eva ? "Spacewalk readiness" : "Readiness today"}</h2></div>
-          <p className={s.eva}>{evaLine}</p>
-          <p className={`${s.status} ${gateClass(overall)}`} aria-label={`Readiness: ${overall}`}>{overall}</p>
           <table className={s.inputs}>
             <thead className={s.srOnly}><tr><th>Signal</th><th>Value</th><th>Your normal</th><th>Status</th></tr></thead>
             <tbody>
@@ -81,13 +77,15 @@ export function Mission({ crewId, day }: Props) {
               ))}
             </tbody>
           </table>
-          <p className={s.reason}>{reason}</p>
           <div className={s.act}>
             <button type="button" className={s.cta} onClick={() => setSent(confirm)}>{primary}</button>
             <span className={s.confirm} role="status">{sent}</span>
           </div>
-          <p className={s.note}>Rule: worst of sleep, reaction time and radiation. Thresholds are demo parameters.</p>
-          <p className={s.note}>{p.escalation}</p>
+          {overall !== "Go" && <p className={s.note}>{p.escalation}</p>}
+          <More label="How readiness is decided">
+            <p>The worst of sleep, reaction time and radiation decides. Thresholds are demo parameters.</p>
+            {overall === "Go" && <p>{p.escalation}</p>}
+          </More>
         </section>
 
         <section className={`${card.card} ${s.link}`} aria-labelledby="link-h">

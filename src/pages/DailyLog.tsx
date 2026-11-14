@@ -5,6 +5,7 @@ import { driftOn } from "../ui/systems.ts";
 import { fmtNum, fmtRange } from "../ui/healthData.ts";
 import { SYMPTOMS, URINE_COLOURS, VISION_OVERDUE } from "../ui/logData.ts";
 import card from "../components/Card.module.css";
+import { PageHero } from "../components/PageHero";
 import s from "./DailyLog.module.css";
 
 type Props = { crewId: string; day: number };
@@ -44,6 +45,7 @@ export function DailyLog({ crewId, day }: Props) {
 
   const total = fluid.reduce((a, b) => a + b, 0);
   const fd = drift.fluid_intake_ml;
+  const short = fd ? Math.max(0, fd.bandLo - total) : 0;
   const rd = drift.reaction_time_ms;
   const toggle = (name: string) => setSymptoms((cur) => (cur.includes(name) ? cur.filter((x) => x !== name) : [...cur, name]));
   const dirty = () => setSaved(false);
@@ -52,8 +54,9 @@ export function DailyLog({ crewId, day }: Props) {
 
   return (
     <>
-      <h1 className={s.title}>Daily Log</h1>
-      <p className={s.sub}>Day {day} check-in. Takes about 2 minutes.</p>
+      <PageHero page="Daily Log" state={short > 0 ? "watch" : "normal"}
+        title={short > 0 ? `Drink ${(short / 1000).toFixed(1)} L more today` : "Your fluid is inside your normal today"}
+        line={`Day ${day} check-in. Takes about 2 minutes.`} />
       <div className={s.grid}>
         <section className={`${card.card} ${s.checkin}`} aria-label="Check-in">
           <fieldset className={s.field}>

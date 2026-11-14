@@ -4,6 +4,7 @@
 .v small { font-family: var(--sans); font-size: 14px; color: var(--ink-2); letter-spacing: 0; margin-left: 2px; }
 .n { font-size: 13px; color: var(--ink-2); }
 .out { color: var(--watch-ink); }
+.nb { white-space: nowrap; }
 
 @media (max-width: 1279px) {
   .wide { grid-column: span 2; }

@@ -6,16 +6,27 @@ export type RiskLevel = "normal" | "watch" | "act";
 export type SystemStatus = RiskLevel | "unknown";
 
 export type PriorityRisk = {
+  /** Coupling rule in src/rules whose engine level drives this risk */
+  ruleId: string;
   title: string;
+  /** Title when the engine says Act: says it louder than "rising" */
+  actTitle?: string;
   level: Exclude<RiskLevel, "normal">;
   sinceDay: number;
   why: string;
+  /** One line shown in the hero; the full why opens behind "Why these are linked" */
+  short: string;
   action: string;
   signals: string[]; // field names from data/crew_sim.json
   eventDay: number;
   eventLabel: string;
   otherRisks: string[];
+  plan: PlanStep[]; // the to-do that answers this risk, in order
+  systemIds: BodySystemId[]; // body systems this risk covers
 };
+
+/** `clears`: once every clearing step is done, today's Act warning steps down to Watch (the readings update tomorrow) */
+export type PlanStep = { id: string; label: string; when: string; cta: string; clears?: boolean };
 
 export type ChartPoint = { day: number; value: number; band: [number, number]; out: number | null };
 

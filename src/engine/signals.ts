@@ -22,7 +22,7 @@ export const SIGNALS: SignalDef[] = [
   { key: "heart_rate", label: "Resting heart rate", unit: "bpm", badDirection: 0, minSd: 2 },
   { key: "bp_sys", label: "Systolic blood pressure", unit: "mmHg", badDirection: 0, minSd: 4 },
   { key: "bp_dia", label: "Diastolic blood pressure", unit: "mmHg", badDirection: 0, minSd: 3 },
-  { key: "temp_c", label: "Body temperature", unit: "°C", badDirection: 1, minSd: 0.15 },
+  { key: "temp_c", label: "Body temperature", unit: "°C", badDirection: 1, minSd: 0.15, expectedPerDay: 0.008 }, // ~+0.6 C over 75 days in flight (Stahn et al. 2017)
   { key: "spo2", label: "Blood oxygen (SpO2)", unit: "%", badDirection: -1, minSd: 0.7 },
   { key: "glucose_mg_dl", label: "Blood sugar", unit: "mg/dL", badDirection: 0, minSd: 6 },
 

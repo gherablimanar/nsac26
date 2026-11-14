@@ -1,32 +1,42 @@
 // Builds what the Overview shows for one astronaut on one mission day.
 // Bands and drift come from the engine (src/engine/baseline.ts). The priority risk text and the
-// task list are MOCK until the coupling rules in src/rules exist.
+// task list are MOCK; the risk level comes from the coupled risk engine (src/engine/risks.ts).
 import { bandCentreAt, computeBaselines, computeDrift } from "../engine/baseline.ts";
 import { SIGNAL_BY_KEY } from "../engine/signals.ts";
-import { historyOf, readingOn } from "../data/crew.ts";
+import { MISSION_PROFILE, historyOf, readingOn } from "../data/crew.ts";
+import { evaluateRisks } from "../engine/risks.ts";
 import type { BodySystem, LinkedSeries, OverviewModel, PriorityRisk, ReadingSummary, Task } from "./viewTypes.ts";
 import { SYSTEMS, systemStatus } from "./systems.ts";
 
 // MOCK: what the kidney-stone coupling rule (brief p. 7, Siew et al. 2024) would return for Marco.
 const RISKS: Record<string, PriorityRisk> = {
   C2: {
+    ruleId: "kidney_stone",
     title: "Kidney stone risk is rising",
+    actTitle: "Act now: kidney stone risk is high",
     level: "watch",
     sinceDay: 55,
+    short: "Less water, more salt and faster bone loss: together they form kidney stones in space.",
     why: "Your fluid intake fell by half on Day 55. Since then your urine has darkened, you are eating more salt, and your bone breakdown marker keeps climbing. Together, that is how kidney stones form in microgravity.",
     action: "Drink 500 ml more today",
     signals: ["fluid_intake_ml", "urine_color_1to8", "sodium_mg", "bone_resorption_index"],
     eventDay: 55,
     eventLabel: "intake dropped",
     otherRisks: ["cognitive readiness", "bone and muscle loss", "fluid shift", "solar storm"],
+    systemIds: ["kidneys"],
+    plan: [
+      { id: "water1", label: "Drink 250 ml", when: "Now", cta: "I drank 250 ml", clears: true },
+      { id: "water2", label: "Drink another 250 ml", when: "Before 16:00", cta: "I drank another 250 ml", clears: true },
+      { id: "urine", label: "Log urine colour", when: "Before sleep", cta: "I logged my urine colour" },
+    ],
   },
 };
 
 // MOCK: the day's routine until a schedule source exists.
 const TASKS: Task[] = [
-  { id: "urine", label: "Log urine colour", when: "Before sleep", done: false },
   { id: "workout", label: "Resistance workout", done: true },
   { id: "reaction", label: "Reaction test", when: "3 minutes, before 18:00", done: false },
+  { id: "vision", label: "Vision self-test", when: "Overdue, last done 9 days ago", done: false },
 ];
 
 const SHORT_LABEL: Record<string, string> = { bone_resorption_index: "Bone breakdown", sodium_mg: "Sodium intake" };
@@ -44,7 +54,11 @@ export function buildOverview(crewId: string, day: number): OverviewModel {
   const history = historyOf(crewId);
   const bands = computeBaselines(history);
   const drift = computeDrift(history, bands, day);
-  const risk = RISKS[crewId] ?? null;
+  // The engine decides the level ("far outside" can reach Act); no engine risk above Nominal means no hero risk
+  const mock = RISKS[crewId];
+  const engine = mock ? evaluateRisks(history, day, MISSION_PROFILE).find((r) => r.ruleId === mock.ruleId) : undefined;
+  const level = engine?.level === "Act" ? "act" : engine?.level === "Watch" ? "watch" : null;
+  const risk: PriorityRisk | null = mock && level ? { ...mock, level } : null;
 
   const from = day - 14;
   const series: LinkedSeries[] = (risk?.signals ?? []).map((key) => {
@@ -85,3 +99,7 @@ export function buildOverview(crewId: string, day: number): OverviewModel {
 
   return { risk, series, tasks: TASKS, systems, readings };
 }
+
+/** True once every clearing step of the plan is done today: the Act warning steps down to Watch. */
+export const easedToday = (risk: PriorityRisk | null, done: string[]) =>
+  !!risk && risk.plan.some((p) => p.clears) && risk.plan.filter((p) => p.clears).every((p) => done.includes(p.id));

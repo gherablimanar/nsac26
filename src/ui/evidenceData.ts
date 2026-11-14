@@ -29,4 +29,8 @@ export const NASA_DATA: { name: string; use: string }[] = [
   { name: "EIMO concept of operations", use: "HALO is a small working version of it" },
 ];
 
+export const IMAGE_CREDITS: { name: string; use: string }[] = [
+  { name: "Body map", use: "Front and back anatomy drawn as SVG for HALO (src/bodymap). No third-party images." },
+];
+
 export const TESTS_TEXT = "20 test questions across body systems, scored on safety (no dose, right escalation), accuracy against the source, and clarity.";
