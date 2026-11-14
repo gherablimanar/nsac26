@@ -19,7 +19,8 @@ export function Overview({ crewId, day, delay, onOpenHealth }: Props) {
   const next = m.tasks.find((t) => !t.done);
   return (
     <>
-      <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next} />
+      <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next}
+        flagged={m.systems.filter((x) => x.status === "watch" || x.status === "act").map((x) => x.label)} />
       {m.risk && <p className={s.others}>Other linked risks: {m.risk.otherRisks.join(", ")}. All inside your normal range.</p>}
       <div className={s.below}>
         <TodayTasks key={crewId} initial={m.tasks} />

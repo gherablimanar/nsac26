@@ -1,33 +1,49 @@
+/* Three floating capsules instead of one bar, so glass never sits on glass:
+   mission info (glass), the crew water pill, and the solid Urgent help button. */
 .top {
-  left: calc(var(--gutter) * 2 + var(--side-w) + -8px);
+  position: fixed;
+  z-index: 10;
+  left: calc(var(--gutter) * 2 + var(--side-w) - 8px);
   right: var(--gutter);
   top: var(--gutter);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.info {
+  position: relative;
+  flex: 1;
+  min-width: 0;
   height: 56px;
   border-radius: 20px;
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 0 8px 0 22px;
-  overflow: visible;
+  padding: 0 22px;
+  white-space: nowrap;
 }
 .day { font-weight: 500; }
 .dim { color: var(--ink-2); }
 .push { margin-left: auto; }
 
-.whoWrap { position: relative; }
-.who { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 4px; border: 0; border-radius: 12px; background: none; cursor: pointer; }
-.who:hover { background: rgba(255, 255, 255, 0.5); }
-.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--card); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
-.menu { position: absolute; right: 0; top: 48px; min-width: 240px; margin: 0; padding: 6px; list-style: none; border-radius: 16px; background: var(--card); box-shadow: 0 16px 40px rgba(16, 19, 26, 0.14); }
-.menu button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; }
-.menu button:hover { background: var(--page); }
-.menu b { display: block; font-weight: 500; }
-.menu small { display: block; color: var(--ink-2); font-size: 13px; }
-
-.help { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--act); color: #FFFFFF; font-weight: 500; cursor: pointer; }
+.help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--act);
+  color: #FFFFFF;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
 .help:hover { background: var(--act-hover); }
 
 @media (max-width: 1279px) {
-  .top { left: 116px; gap: 16px; }
+  .top { left: 116px; }
   .push { display: none; }
 }

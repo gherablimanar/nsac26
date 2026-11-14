@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { CaretDown, Check, FirstAid } from "@phosphor-icons/react";
+import { useRef, type CSSProperties } from "react";
+import { FirstAid } from "@phosphor-icons/react";
 import type { CrewMember, MissionProfile } from "../engine/types.ts";
+import { LiquidNavbar } from "./ui/liquid-glass-navbar";
 import glass from "./Glass.module.css";
 import s from "./TopBar.module.css";
 import { useShine } from "./useShine";
@@ -11,7 +12,20 @@ const MISSION: Record<MissionProfile, { name: string; delay: string | null }> = 
   iss: { name: "ISS", delay: null },
 };
 
-const initials = (name: string) => name.split(" ").slice(-2).map((w) => w[0]).join("");
+const words = (name: string) => name.split(" ");
+const firstName = (name: string) => words(name).slice(-2)[0];
+const initials = (name: string) => words(name).slice(-2).map((w) => w[0]).join("");
+
+/** Initials avatar as SVG so it takes the pill's text colour and the tap "pop" */
+const Avatar = ({ name }: { name: string }) => (
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+    <circle cx="12" cy="12" r="12" fill="currentColor" />
+    <text x="12" y="15.6" textAnchor="middle" fontSize="9.5" fontWeight="600" fill="var(--card)" fontFamily="var(--sans)">{initials(name)}</text>
+  </svg>
+);
+
+// Match the water pill to HALO's type and ink colours
+const pillStyle = { fontFamily: "var(--sans)", "--n-fg": "var(--ink)", "--n-fg-soft": "var(--ink-2)" } as CSSProperties;
 
 type Props = {
   profile: MissionProfile;
@@ -23,45 +37,29 @@ type Props = {
 };
 
 export function TopBar({ profile, day, crew, selected, onSelect, onUrgentHelp }: Props) {
-  const ref = useRef<HTMLElement>(null);
-  useShine(ref);
-  const [open, setOpen] = useState(false);
+  const infoRef = useRef<HTMLDivElement>(null);
+  useShine(infoRef);
   const m = MISSION[profile];
-  const shortName = selected.name.split(" ").slice(-2).join(" ");
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    addEventListener("keydown", close);
-    return () => removeEventListener("keydown", close);
-  }, [open]);
 
   return (
-    <header ref={ref} className={`${glass.glass} ${s.top}`}>
-      <span><span className={`mono ${s.day}`}>Day {day}</span>&nbsp;&nbsp;<span className={s.dim}>{m.name}</span></span>
-      <span className={`${s.dim} ${s.push}`}>Synced 3 min ago</span>
-      <span className={s.dim}>
-        {m.delay ? <>Houston hears you in <span className="mono">{m.delay}</span></> : "Live link to Houston"}
-      </span>
-      <div className={s.whoWrap}>
-        <button className={s.who} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          <span className={s.avatar}>{initials(selected.name)}</span>{shortName}<CaretDown size={14} className={s.dim} />
-        </button>
-        {open && (
-          <ul className={s.menu} role="listbox" aria-label="Astronaut">
-            {crew.map((c) => (
-              <li key={c.id} role="option" aria-selected={c.id === selected.id}>
-                <button onClick={() => { onSelect(c.id); setOpen(false); }}>
-                  <span><b>{c.name.split(" ").slice(-2).join(" ")}</b><small>{c.role}</small></span>
-                  {c.id === selected.id && <Check size={16} />}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+    <header className={s.top}>
+      <div ref={infoRef} className={`${glass.glass} ${s.info}`}>
+        <span><span className={`mono ${s.day}`}>Day {day}</span>&nbsp;&nbsp;<span className={s.dim}>{m.name}</span></span>
+        <span className={`${s.dim} ${s.push}`}>Synced 3 min ago</span>
+        <span className={s.dim}>
+          {m.delay ? <>Houston hears you in <span className="mono">{m.delay}</span></> : "Live link to Houston"}
+        </span>
       </div>
+      <LiquidNavbar
+        ariaLabel="Astronaut"
+        tone="light"
+        style={pillStyle}
+        active={Math.max(0, crew.findIndex((c) => c.id === selected.id))}
+        onChange={(i) => onSelect(crew[i].id)}
+        items={crew.map((c) => ({ label: firstName(c.name), icon: <Avatar name={c.name} />, fx: "pop" as const }))}
+      />
       {/* Solid on purpose: the one control that must be found instantly */}
-      <button className={s.help} onClick={onUrgentHelp}><FirstAid size={18} />Urgent help</button>
+      <button className={s.help} onClick={onUrgentHelp}><FirstAid size={20} />Urgent help</button>
     </header>
   );
 }

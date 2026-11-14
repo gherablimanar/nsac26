@@ -3,16 +3,21 @@ import type { LinkedSeries, PriorityRisk, Task } from "../ui/viewTypes.ts";
 import { LinkedSignalsChart } from "./LinkedSignalsChart";
 import s from "./PriorityAlert.module.css";
 
-type Props = { risk: PriorityRisk | null; series: LinkedSeries[]; today: number; delay: string | null; nextTask?: Task };
+type Props = { risk: PriorityRisk | null; series: LinkedSeries[]; today: number; delay: string | null; nextTask?: Task; flagged: string[] };
 
 /** The one loud thing on the Overview: what is linked, what it shows, what to do. */
-export function PriorityAlert({ risk, series, today, delay, nextTask }: Props) {
+export function PriorityAlert({ risk, series, today, delay, nextTask, flagged }: Props) {
   if (!risk) {
+    const one = flagged.length === 1;
     return (
       <section className={s.hero} aria-labelledby="risk-title">
-        <p className={s.status}>All normal</p>
+        <p className={s.status}>{flagged.length ? "No linked risks" : "All normal"}</p>
         <h1 id="risk-title" className={s.title}>Nothing needs you today</h1>
-        <p className={s.why}>Every reading is inside your own normal range, and no linked risks are rising.</p>
+        <p className={s.why}>
+          {flagged.length
+            ? `${flagged.join(" and ")} ${one ? "is" : "are"} outside your normal range, but nothing is linked to ${one ? "it" : "them"}. HALO keeps watching.`
+            : "Every reading is inside your own normal range, and no linked risks are rising."}
+        </p>
         {nextTask && <p className={s.next}>Next on your list: <b>{nextTask.label}</b>{nextTask.when ? `, ${nextTask.when.toLowerCase()}` : ""}</p>}
       </section>
     );
