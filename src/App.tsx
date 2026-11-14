@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sidebar, type Page } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { DEMO_DAY, MISSION_PROFILE, SIM, crewById } from "./data/crew.ts";
-import { Field, Overview, overviewState } from "./pages/Overview";
+import { Overview } from "./pages/Overview";
+import { RiskBanner } from "./components/RiskBanner";
+import { buildOverview } from "./ui/overviewData.ts";
 import { Health } from "./pages/Health";
 import { DailyLog } from "./pages/DailyLog";
 import { Assistant } from "./pages/Assistant";
@@ -33,15 +35,16 @@ export default function App() {
 
   const openHealth = (id: RegionId) => { setSystem(id); setPage("health"); };
   const navigate = (p: Page) => { setUrgent(false); setPage(p); };
-  const fieldState = overviewState(crewId, DEMO_DAY);
+  const risk = useMemo(() => buildOverview(crewId, DEMO_DAY).risk, [crewId]);
+  const actRisk = risk?.level === "act" ? risk : null;
 
   return (
     <>
-      {page === "overview" && <Field key={fieldState} state={fieldState} />}
       <Sidebar page={page} onNavigate={navigate} />
       <TopBar profile={MISSION_PROFILE} day={DEMO_DAY} crew={SIM.crew} selected={crewById(crewId)}
         onSelect={setCrewId} onUrgentHelp={() => { setUrgent(true); setPage("assistant"); }} />
-      <main className={s.main}>
+      <main key={crewId} className={s.main}>
+        {actRisk && page !== "overview" && <RiskBanner risk={actRisk} onOpen={() => navigate("overview")} />}
         {page === "overview" && <Overview key={crewId} crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} />}
         {page === "settings" && <Settings look={look} onLook={setLook} />}
         {page === "health" && <Health crewId={crewId} day={DEMO_DAY} selected={system} onSelect={setSystem} />}

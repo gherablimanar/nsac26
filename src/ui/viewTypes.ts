@@ -9,6 +9,8 @@ export type PriorityRisk = {
   /** Coupling rule in src/rules whose engine level drives this risk */
   ruleId: string;
   title: string;
+  /** Title when the engine says Act: says it louder than "rising" */
+  actTitle?: string;
   level: Exclude<RiskLevel, "normal">;
   sinceDay: number;
   why: string;

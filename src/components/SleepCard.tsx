@@ -37,7 +37,7 @@ export function SleepCard({ crewId, day, onOpen }: Props) {
         <span className={s.band} style={{ bottom: pct(d.bandLo), height: `calc(${pct(d.bandHi)} - ${pct(d.bandLo)})` }} />
         {week.map((r, i) => (
           <span key={r.day} className={`${s.bar} ${r.sleep_hours < d.bandLo ? s.low : ""} ${r === last ? s.last : ""}`}
-            style={{ height: pct(r.sleep_hours), animationDelay: `${i * 40}ms` }} />
+            style={{ height: pct(r.sleep_hours), animationDelay: `${i * 20}ms` }} />
         ))}
       </div>
       <div className={s.days} aria-hidden="true">{week.map((r) => <span key={r.day}>D{r.day}</span>)}</div>

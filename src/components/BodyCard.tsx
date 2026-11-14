@@ -53,7 +53,7 @@ export function BodyCard({ crewId, day, size = "compact", selected, onSelect, on
       </div>
       <Segmented label="Body view" value={view} onChange={setView} options={[{ id: "anterior", label: "Front" }, { id: "posterior", label: "Back" }]} />
       <div className={s.layout}>
-        <div className={s.figure}>
+        <div key={view} className={s.figure}>
           <BodyFigure view={view} model={model} selected={selected ?? null} linked={null} onSelect={(id) => onSelect(id)} />
         </div>
         <div className={s.side}>

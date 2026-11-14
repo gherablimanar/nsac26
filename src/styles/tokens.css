@@ -23,7 +23,8 @@
   --accent-hover: #A3380B;
   --accent-soft: rgba(193, 68, 14, 0.1);
 
-  /* Motion */
+  /* Motion: every block that appears (page parts, cards, panels, dropdowns, messages) takes --enter to come in */
+  --enter: 150ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-pop: cubic-bezier(0.34, 1.5, 0.64, 1);
 

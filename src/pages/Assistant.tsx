@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ArrowLeft, CaretRight, ChartLineUp, Check, ClockCounterClockwise, Microphone, RocketLaunch, ShieldCheck, Stethoscope } from "@phosphor-icons/react";
 import card from "../components/Card.module.css";
+import { HaloMark } from "../components/HaloMark";
+import { PageHero } from "../components/PageHero";
 import { More } from "../components/More";
 import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
 import { driftOn } from "../ui/systems.ts";
-import { readingOn } from "../data/crew.ts";
+import { crewById, readingOn } from "../data/crew.ts";
 import { buildOverview } from "../ui/overviewData.ts";
 import { GATE_OF, worstGate } from "../ui/missionData.ts";
 import { SYSTEMS, systemStatus } from "../ui/systems.ts";
@@ -116,7 +118,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   // One-line status so you know where you stand before choosing anything
   const flagged = SYSTEMS.filter((d) => systemStatus(d, drift) === "watch").map((d) => d.label);
   const status = risk
-    ? <><b className={risk.level === "act" ? s.act : s.watch}>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;{risk.title} since Day {risk.sinceDay}.</>
+    ? <><b className={risk.level === "act" ? s.act : s.watch}>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;{risk.title.replace(/ is rising$/, "")} since Day {risk.sinceDay}.</>
     : flagged.length
       ? <>No linked risks. {flagged.join(" and ")} {flagged.length === 1 ? "is" : "are"} outside your normal range on {flagged.length === 1 ? "its" : "their"} own.</>
       : <>Your readings are inside your normal range today.</>;
@@ -139,14 +141,14 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
 
   return (
     <div>
-      <h1 className={s.title}>Assistant</h1>
+      <PageHero page="Assistant" state={risk?.level ?? "normal"}
+        title={<span className={s.heroTitle}><HaloMark size={48} className={s.heroMark} />{mode === "start" ? `How are you feeling, ${crewById(crewId).name.split(" ").slice(-2)[0]}?` : "HALO is listening"}</span>}
+        line={mode === "start" ? status : "Offline on board. Emergency rules run before the AI."} />
       <div className={s.grid}>
-        <section className={`${card.card} ${s.convo}`} aria-label="Conversation with HALO">
+        <section className={`${card.card} ${s.convo} ${mode === "chat" || urgent ? s.chatting : ""}`} aria-label="Conversation with HALO">
           <div className={s.messages} ref={area}>
             {mode === "start" && (
               <div className={s.start}>
-                <p className={s.status}>{status}</p>
-                <h2 className={s.q}>How are you feeling?</h2>
                 <div className={s.choices}>
                   {([
                     ["symptom", Stethoscope, "Report a symptom", "Pain, headache, vision, anything that feels off."],
@@ -154,7 +156,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
                     ["task", RocketLaunch, "Prepare for a task", "Spacewalk or docking: are you ready today?"],
                   ] as const).map(([k, Icon, t, d]) => (
                     <button key={k} type="button" className={s.choice} onClick={() => start(k)}>
-                      <Icon size={22} /><span><b>{t}</b><small>{d}</small></span><CaretRight size={18} color="var(--ink-2)" />
+                      <span className={s.choiceIcon}><Icon size={22} /></span><b>{t}</b><small>{d}</small><CaretRight size={18} className={s.choiceGo} />
                     </button>
                   ))}
                 </div>
@@ -173,7 +175,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
               <div key={m.id} className={s.user}>{m.text}</div>
             ) : (
               <div key={m.id} className={s.halo}>
-                <div className={s.label}>HALO</div>
+                <div className={s.label}><HaloMark size={20} />HALO</div>
                 {m.blocks.map(renderBlock)}
               </div>
             ))}
@@ -193,7 +195,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
             <dl className={s.rows}>
               <div><dt>Mission day</dt><dd>Day {mono(String(day))}, Mars transit</dd></div>
               <div><dt>Houston delay</dt><dd>{delay ? <>{mono(delay)} one way</> : "Live"}</dd></div>
-              <div><dt>Linked risk</dt><dd>{risk ? `${risk.title}, ${risk.level === "act" ? "Act" : "Watch"} since Day ${risk.sinceDay}` : "None right now"}</dd></div>
+              <div><dt>Linked risk</dt><dd>{risk ? `${risk.title.replace(/ is rising$/, "")}, ${risk.level === "act" ? "Act" : "Watch"} since Day ${risk.sinceDay}` : "None right now"}</dd></div>
               {fluid && <div><dt>Fluid intake</dt><dd className={rowVal(fluid.status !== "inside band")}>{fluidText}</dd></div>}
               {urine && <div><dt>Urine colour</dt><dd className={rowVal(urine.status !== "inside band")}>{urineText}</dd></div>}
               {sodium && <div><dt>Sodium</dt><dd className={rowVal(sodium.status !== "inside band")}>{sodiumText}</dd></div>}

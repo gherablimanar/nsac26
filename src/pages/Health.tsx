@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { BookOpen } from "@phosphor-icons/react";
 import { BodyCard, REGION_STATUS_TEXT } from "../components/BodyCard";
+import { PageHero } from "../components/PageHero";
+import { joinAnd } from "../ui/text.ts";
 import { SignalTrend } from "../components/SignalTrend";
 import { SleepCard } from "../components/SleepCard";
 import { buildBodyMapModel } from "../bodymap/model.ts";
@@ -18,16 +20,25 @@ export function Health({ crewId, day, selected, onSelect }: Props) {
   const sel: RegionId = selected ?? worst("act") ?? worst("watch") ?? "heart";
   const r = model.regions[sel];
   const risks = r.risks.filter((x) => x.level !== "Nominal");
+  const level = model.overall === "act" ? "act" : model.overall === "watch" ? "watch" : "normal";
+  const flagged = REGIONS.filter((d) => ["watch", "act"].includes(model.regions[d.id].status)).map((d) => d.name.toLowerCase());
+  const title = flagged.length
+    ? `${joinAnd(flagged).replace(/^./, (c) => c.toUpperCase())} need${flagged.length === 1 ? "s" : ""} attention`
+    : "Every part of your body is inside your normal";
+  const linked = model.risks.filter((x) => x.level !== "Nominal");
 
   return (
     <>
-      <h1 className={s.title}>Health</h1>
+      <PageHero page="Health" state={level} title={title}
+        line={linked.length
+          ? <>Linked risks: {linked.map((x, i) => <span key={x.ruleId}>{i ? ", " : ""}{x.name} <b className={x.level === "Act" ? s.actWord : s.watchWord}>{x.level}</b></span>)}.</>
+          : "No linked risks are rising."} />
       <div className={s.grid}>
         <div className={s.map}>
           <BodyCard key={crewId} size="full" crewId={crewId} day={day} selected={sel} onSelect={onSelect} />
           <SleepCard crewId={crewId} day={day} onOpen={() => onSelect("brain")} />
         </div>
-        <div className={s.panel}>
+        <div key={sel} className={s.panel}>
           <header className={s.head}>
             <div className={s.nameRow}>
               <h2 className={s.name}>{r.def.name}</h2>

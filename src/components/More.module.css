@@ -4,5 +4,5 @@
 .more summary:hover { color: var(--accent-hover); }
 .caret { transition: transform 0.25s var(--ease-out); }
 .more[open] .caret { transform: rotate(180deg); }
-.body { padding-bottom: 4px; color: var(--ink-2); animation: lift 0.28s var(--ease-out) both; }
+.body { padding-bottom: 4px; color: var(--ink-2); animation: lift var(--enter) var(--ease-out) both; }
 .body p { margin: 0 0 8px; }

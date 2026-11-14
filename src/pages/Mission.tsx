@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Segmented } from "../components/Segmented";
 import { More } from "../components/More";
+import { PageHero } from "../components/PageHero";
 import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
 import card from "../components/Card.module.css";
 import { MISSION_PROFILE, historyOf, readingOn } from "../data/crew";
@@ -55,17 +56,14 @@ export function Mission({ crewId, day }: Props) {
 
   return (
     <>
-      <div className={s.top}>
-        <h1 className={s.title}>Mission</h1>
-        <Segmented label="Mission profile" value={profile} onChange={setProfile}
-          options={PROFILES.map((x) => ({ id: x.id, label: x.label }))} />
-      </div>
+      <PageHero page="Mission" state={overall === "Go" ? "normal" : overall === "No-go" ? "act" : "watch"}
+        title={eva ? `${overall === "Go" ? "Go" : overall === "No-go" ? "No-go" : "Go with caution"} for your spacewalk` : `Readiness today: ${overall}`}
+        line={`${evaLine}.${reason ? ` ${reason}` : ""}`}
+        aside={<Segmented label="Mission profile" value={profile} onChange={setProfile} options={PROFILES.map((x) => ({ id: x.id, label: x.label }))} />} />
 
-      <div className={s.grid}>
+      <div key={profile} className={s.grid}>
         <section className={`${card.card} ${s.hero}`} aria-labelledby="gate-h">
           <div className={card.head}><h2 id="gate-h">{eva ? "Spacewalk readiness" : "Readiness today"}</h2></div>
-          <p className={s.eva}>{evaLine}</p>
-          <p className={`${s.status} ${gateClass(overall)}`} aria-label={`Readiness: ${overall}`}>{overall}</p>
           <table className={s.inputs}>
             <thead className={s.srOnly}><tr><th>Signal</th><th>Value</th><th>Your normal</th><th>Status</th></tr></thead>
             <tbody>
@@ -79,7 +77,6 @@ export function Mission({ crewId, day }: Props) {
               ))}
             </tbody>
           </table>
-          {reason && <p className={s.reason}>{reason}</p>}
           <div className={s.act}>
             <button type="button" className={s.cta} onClick={() => setSent(confirm)}>{primary}</button>
             <span className={s.confirm} role="status">{sent}</span>

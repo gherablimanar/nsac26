@@ -1,15 +1,8 @@
-.top { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
-.top .title { margin: 0; }
-.title { margin: 0 0 24px; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .hero { grid-column: span 2; }
 .rad { grid-column: 1 / -1; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.eva { margin: 0 0 4px; color: var(--ink-2); }
-.status { margin: 0 0 20px; font-size: 44px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; color: var(--ink); }
-.caution { color: var(--watch-ink); }
-.nogo { color: var(--act); }
 .inputs { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 .inputs th, .inputs td { padding: 8px 16px 8px 0; text-align: left; font-weight: 400; vertical-align: baseline; }
 .inputs th[scope="row"] { font-weight: 500; }
@@ -19,7 +12,6 @@
 .gateWord { font-weight: 500; color: var(--ink); }
 .gateWord.caution { color: var(--watch-ink); }
 .gateWord.nogo { color: var(--act); }
-.reason { margin: 0 0 24px; max-width: 62ch; }
 .act { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
 .cta { height: 50px; padding: 0 24px; border: 0; border-radius: 16px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 500; cursor: pointer; }
 .cta:hover { background: #262B36; }

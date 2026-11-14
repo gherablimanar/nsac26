@@ -1,6 +1,7 @@
 import { useState } from "react";
 import card from "../components/Card.module.css";
 import { More } from "../components/More";
+import { PageHero } from "../components/PageHero";
 import { readingOn } from "../data/crew";
 import { PACKED_DAYS_BEFORE_LAUNCH, POTENCY, SET_ON_DAY, TODAY, WEEK, WEEK_DAYS, strengthOf, below90Day } from "../ui/medicinesData";
 import s from "./Medicines.module.css";
@@ -11,10 +12,17 @@ export function Medicines({ crewId, day }: Props) {
   const [melTaken, setMelTaken] = useState(false);
   const total = readingOn(crewId, day)?.radiation_mSv_total ?? 0;
   const stowed = day + PACKED_DAYS_BEFORE_LAUNCH;
+  const due = TODAY.find((m) => m.status === "Due" && !(m.id === "mel" && melTaken));
 
   return (
     <>
-      <h1 className={s.title}>Medicines</h1>
+      <PageHero page="Medicines" state="normal"
+        title={due ? `${due.name} due at ${due.time}` : "Today's doses are taken"}
+        line={`Set by your flight surgeon on Day ${SET_ON_DAY}. HALO never changes doses.`}>
+        {melTaken
+          ? <button type="button" className={s.text} onClick={() => setMelTaken(false)}>Undo melatonin</button>
+          : <button type="button" className={s.cta} onClick={() => setMelTaken(true)}>Mark melatonin as taken</button>}
+      </PageHero>
 
       <div className={s.grid}>
         <section className={`${card.card}`} aria-labelledby="today-h">
@@ -31,12 +39,6 @@ export function Medicines({ crewId, day }: Props) {
               );
             })}
           </ul>
-          <div className={s.act}>
-            {melTaken
-              ? <button type="button" className={s.text} onClick={() => setMelTaken(false)}>Undo</button>
-              : <button type="button" className={s.cta} onClick={() => setMelTaken(true)}>Mark melatonin as taken</button>}
-          </div>
-          <p className={s.note}>Set by your flight surgeon on Day {SET_ON_DAY}. HALO never changes doses.</p>
         </section>
 
         <section className={card.card} aria-labelledby="week-h">

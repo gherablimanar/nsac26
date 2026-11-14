@@ -1,4 +1,3 @@
-.title { margin: 0 0 24px; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; }
 .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
 .pharm { grid-column: 1 / -1; }
 
@@ -10,12 +9,10 @@
 .what span { color: var(--ink-2); font-size: 14px; }
 .state { color: var(--ink-2); }
 .due { color: var(--watch-ink); font-weight: 500; }
-.act { margin-bottom: 16px; min-height: 50px; display: flex; align-items: center; }
 .cta { height: 50px; padding: 0 24px; border: 0; border-radius: 16px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 500; cursor: pointer; }
 .cta:hover { background: #262B36; }
 .cta:active { transform: translateY(1px) scale(0.98); }
 .text { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font-weight: 500; cursor: pointer; text-decoration: underline; }
-.note { margin: 0; font-size: 13px; color: var(--ink-2); }
 
 .weeks { display: flex; flex-direction: column; gap: 32px; }
 .weekHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }

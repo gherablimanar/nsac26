@@ -1,4 +1,3 @@
-.title { margin: 0 0 24px; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; }
 .grid { display: grid; grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); gap: 48px; align-items: start; }
 .map { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
@@ -8,6 +7,8 @@
 .status { font-size: 14px; color: var(--ink-2); }
 .status.watch { color: var(--watch-ink); }
 .status.act { color: var(--act); font-weight: 500; }
+.actWord { color: var(--act); }
+.watchWord { color: var(--watch-ink); }
 .risk { margin: 12px 0 0; max-width: 62ch; padding: 12px 14px; border-radius: 14px; font-size: 15px; }
 .risk b { font-weight: 500; }
 .risk.act { background: rgba(180, 43, 35, 0.07); color: var(--ink); }
