@@ -18,12 +18,15 @@ const UTIL: { id: Page; label: string; icon: Icon }[] = [
 ];
 
 export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
-  const item = ({ id, label, icon: I }: (typeof MAIN)[number]) => (
-    <a key={id} href={`#${id}`} className={s.item} aria-current={page === id ? "page" : undefined}
-      onClick={(e) => { e.preventDefault(); onNavigate(id); }}>
-      <I size={20} /><span>{label}</span>
-    </a>
-  );
+  const item = ({ id, label, icon: I }: (typeof MAIN)[number]) => {
+    const link = (
+      <a key={id} href={`#${id}`} className={s.item} aria-current={page === id ? "page" : undefined}
+        onClick={(e) => { e.preventDefault(); onNavigate(id); }}>
+        <I size={20} /><span>{label}</span>
+      </a>
+    );
+    return page === id ? <LiquidGlass key={id} asChild material="clear">{link}</LiquidGlass> : link;
+  };
   return (
     <LiquidGlass asChild material="regular" refraction={28}>
     <aside className={s.side}>

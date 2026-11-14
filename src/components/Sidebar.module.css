@@ -14,9 +14,9 @@
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 12px 28px; font-weight: 600; font-size: 18px; letter-spacing: 0.02em; }
 .brand svg { width: 26px; height: 14px; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
-.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radius-control); text-decoration: none; color: var(--ink-2); }
+.item { position: relative; isolation: isolate; display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radius-control); text-decoration: none; color: var(--ink-2); }
 .item:hover { color: var(--ink); background: rgba(255, 255, 255, 0.45); }
-.item[aria-current="page"] { color: var(--ink); background: rgba(255, 255, 255, 0.75); }
+.item[aria-current="page"] { color: var(--ink); }
 .end { margin-top: auto; }
 .proto { margin: 12px 12px 0; font-size: 12px; color: var(--ink-2); }
 

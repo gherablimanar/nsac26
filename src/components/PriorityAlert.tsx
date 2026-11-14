@@ -1,6 +1,7 @@
 import { ArrowRight, PaperPlaneTilt } from "@phosphor-icons/react";
 import type { LinkedSeries, PriorityRisk, Task } from "../ui/viewTypes.ts";
 import { LinkedSignalsChart } from "./LinkedSignalsChart";
+import { LiquidGlassButton } from "./ui/apple-tahoe-liquid-glass-button";
 import s from "./PriorityAlert.module.css";
 
 type Props = { risk: PriorityRisk | null; series: LinkedSeries[]; today: number; delay: string | null; nextTask?: Task; flagged: string[] };
@@ -32,7 +33,9 @@ export function PriorityAlert({ risk, series, today, delay, nextTask, flagged }:
       </div>
       <div className={s.act}>
         <button className={s.cta}>{risk.action}<ArrowRight size={18} /></button>
-        <a className={s.link} href="#evidence">Why these are linked</a>
+        <LiquidGlassButton asChild interactive material="clear">
+          <a className={s.glassBtn} href="#evidence">Why these are linked</a>
+        </LiquidGlassButton>
         {delay && <span className={s.queued}><PaperPlaneTilt size={16} />Note for your flight surgeon reaches Houston in <span className="mono">{delay}</span></span>}
       </div>
     </section>

@@ -13,7 +13,8 @@
 }
 .info {
   position: relative;
-  isolation: isolate;
+  background: var(--card);
+  border: 1px solid rgba(16, 19, 26, 0.06);
   flex: 1;
   min-width: 0;
   height: 56px;

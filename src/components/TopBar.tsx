@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 import { FirstAid } from "@phosphor-icons/react";
 import type { CrewMember, MissionProfile } from "../engine/types.ts";
 import { LiquidNavbar } from "./ui/liquid-glass-navbar";
-import { LiquidGlass } from "./ui/apple-tahoe-liquid-glass-button";
 import s from "./TopBar.module.css";
 
 const MISSION: Record<MissionProfile, { name: string; delay: string | null }> = {
@@ -40,7 +39,6 @@ export function TopBar({ profile, day, crew, selected, onSelect, onUrgentHelp }:
 
   return (
     <header className={s.top}>
-      <LiquidGlass asChild material="regular">
       <div className={s.info}>
         <span><span className={`mono ${s.day}`}>Day {day}</span>&nbsp;&nbsp;<span className={s.dim}>{m.name}</span></span>
         <span className={`${s.dim} ${s.push}`}>Synced 3 min ago</span>
@@ -48,7 +46,6 @@ export function TopBar({ profile, day, crew, selected, onSelect, onUrgentHelp }:
           {m.delay ? <>Houston hears you in <span className="mono">{m.delay}</span></> : "Live link to Houston"}
         </span>
       </div>
-      </LiquidGlass>
       <LiquidNavbar
         ariaLabel="Astronaut"
         tone="light"
