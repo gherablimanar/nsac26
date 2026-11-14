@@ -1,45 +1,48 @@
+import type { CSSProperties } from "react";
 import { Books, ChatCircleText, GearSix, Heartbeat, NotePencil, Pill, Planet, SquaresFour, type Icon } from "@phosphor-icons/react";
 import { LiquidGlass } from "./ui/apple-tahoe-liquid-glass-button";
+import { LiquidNavbar } from "./ui/liquid-glass-navbar";
 import s from "./Sidebar.module.css";
 
 export type Page = "overview" | "health" | "log" | "assistant" | "mission" | "medicines" | "evidence" | "settings";
 
-const MAIN: { id: Page; label: string; icon: Icon }[] = [
+// Main sections first; Evidence and Settings sit at the bottom (rarely used, so demoted)
+const ITEMS: { id: Page; label: string; icon: Icon }[] = [
   { id: "overview", label: "Overview", icon: SquaresFour },
   { id: "health", label: "Health", icon: Heartbeat },
   { id: "log", label: "Daily Log", icon: NotePencil },
   { id: "assistant", label: "Assistant", icon: ChatCircleText },
   { id: "mission", label: "Mission", icon: Planet },
   { id: "medicines", label: "Medicines", icon: Pill },
-];
-const UTIL: { id: Page; label: string; icon: Icon }[] = [
   { id: "evidence", label: "Evidence", icon: Books },
   { id: "settings", label: "Settings", icon: GearSix },
 ];
 
+const waterStyle = { fontFamily: "var(--sans)", "--n-fg": "var(--ink)", "--n-fg-soft": "var(--ink-2)" } as CSSProperties;
+
 export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
-  const item = ({ id, label, icon: I }: (typeof MAIN)[number]) => {
-    const link = (
-      <a key={id} href={`#${id}`} className={s.item} aria-current={page === id ? "page" : undefined}
-        onClick={(e) => { e.preventDefault(); onNavigate(id); }}>
-        <I size={20} /><span>{label}</span>
-      </a>
-    );
-    return page === id ? <LiquidGlass key={id} asChild material="clear">{link}</LiquidGlass> : link;
-  };
   return (
     <LiquidGlass asChild material="regular" refraction={28}>
-    <aside className={s.side}>
-      <div className={s.brand}>
-        <svg viewBox="0 0 26 14" fill="none" aria-hidden="true"><ellipse cx="13" cy="7" rx="11.5" ry="5" stroke="currentColor" strokeWidth="2" /></svg>
-        <span>HALO</span>
-      </div>
-      <nav className={s.nav} aria-label="Main">{MAIN.map(item)}</nav>
-      <div className={s.end}>
-        <nav className={s.nav} aria-label="Utilities">{UTIL.map(item)}</nav>
+      <aside className={s.side}>
+        <div className={s.brand}>
+          <svg viewBox="0 0 26 14" fill="none" aria-hidden="true"><ellipse cx="13" cy="7" rx="11.5" ry="5" stroke="currentColor" strokeWidth="2" /></svg>
+          <span>HALO</span>
+        </div>
+        {/* Water drop slides between sections; bare = no second glass inside the glass sidebar */}
+        <LiquidNavbar
+          className={s.water}
+          ariaLabel="Main"
+          orientation="vertical"
+          bare
+          ambient="interaction"
+          tone="light"
+          style={waterStyle}
+          active={Math.max(0, ITEMS.findIndex((i) => i.id === page))}
+          onChange={(i) => onNavigate(ITEMS[i].id)}
+          items={ITEMS.map(({ label, icon: I }) => ({ label, icon: <I size={20} />, fx: "pop" as const }))}
+        />
         <p className={s.proto}>Prototype, not a medical device</p>
-      </div>
-    </aside>
+      </aside>
     </LiquidGlass>
   );
 }

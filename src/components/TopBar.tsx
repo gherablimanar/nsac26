@@ -48,6 +48,7 @@ export function TopBar({ profile, day, crew, selected, onSelect, onUrgentHelp }:
       </div>
       <LiquidNavbar
         ariaLabel="Astronaut"
+        ambient="interaction"
         tone="light"
         style={pillStyle}
         active={Math.max(0, crew.findIndex((c) => c.id === selected.id))}

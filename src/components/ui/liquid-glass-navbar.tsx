@@ -9,7 +9,10 @@
  * without WebGL it falls back to a CSS drop. No dependencies besides React.
  * by guglielmogiannattasio.it
  *
- * HALO change: added the `ariaLabel` prop (was hard-coded to "Main").
+ * HALO changes: `ariaLabel` prop (was hard-coded to "Main"); `orientation="vertical"`
+ * (drop moves up and down); `bare` (no pill glass, for use inside another glass
+ * surface); `ambient="interaction"` (water only animates while hovered or moving,
+ * so it costs no GPU at rest).
  */
 
 import * as React from "react"
@@ -37,6 +40,12 @@ export type LiquidNavbarProps = {
   sound?: boolean
   /** accessible name of the nav landmark */
   ariaLabel?: string
+  /** "vertical" stacks the items and moves the drop up and down */
+  orientation?: "horizontal" | "vertical"
+  /** no pill glass or rim: for use inside another glass surface */
+  bare?: boolean
+  /** "always": water ripples all the time; "interaction": only while hovered or moving */
+  ambient?: "always" | "interaction"
   className?: string
   style?: React.CSSProperties
 }
@@ -114,6 +123,11 @@ const NIMBUS_CSS = `
 .nimbus-nav[data-compact="true"] .nimbus-item{padding:0 13px}
 .nimbus-nav[data-compact="true"] .nimbus-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:520px){.nimbus-nav:not([data-compact="false"]) .nimbus-item{padding:0 13px}.nimbus-nav:not([data-compact="false"]) .nimbus-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+.nimbus-nav[data-orient="vertical"]{display:flex;flex-direction:column;align-items:stretch;border-radius:24px}
+.nimbus-nav[data-orient="vertical"] .nimbus-item{justify-content:flex-start;width:100%;height:44px;padding:0 12px;gap:12px;font-size:15px}
+.nimbus-nav[data-orient="vertical"] .nimbus-drop{top:0;bottom:auto;left:0;right:0;height:44px}
+.nimbus-nav[data-bare="true"]{padding:0}
+.nimbus-nav[data-bare="true"] .nimbus-glass{display:none}
 @media (prefers-reduced-motion:reduce){.nv-ico svg,.nv-ico::before,.nv-ico::after,.nv-door{animation:none!important;transition:none}}
 `
 
@@ -121,18 +135,18 @@ const NIMBUS_CSS = `
 const VERT = `attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`
 const FRAG = `precision highp float;
 uniform vec2 uRes;uniform float uDpr;uniform float uTime;uniform vec4 uPill;
-uniform vec4 uBlob[6];uniform float uSy[6];uniform vec4 uRip[6];uniform vec3 uMouse;uniform float uDark;uniform float uAmb;
+uniform vec4 uBlob[6];uniform float uSy[6];uniform vec4 uRip[6];uniform vec3 uMouse;uniform float uDark;uniform float uAmb;uniform float uBare;uniform float uPillR;
 float sdRB(vec2 p,vec2 b,float r){vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}
 float sdCap(vec2 p,vec4 B,float sy){p-=B.xy;p.y/=sy;p.x=max(abs(p.x)-B.z,0.);return(length(p)-B.w)*min(1.,sy);}
 float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
 float dropD(vec2 p){float d=1e4;for(int i=0;i<6;i++){if(uBlob[i].w>.5){d=smin(d,sdCap(p,uBlob[i],uSy[i]),13.);}}return d;}
-float pillD(vec2 p){vec2 h=uPill.zw*.5;return sdRB(p-uPill.xy-h,h,h.y);}
+float pillD(vec2 p){vec2 h=uPill.zw*.5;return sdRB(p-uPill.xy-h,h,min(uPillR,min(h.x,h.y)));}
 float lens(float d,float w){float t=clamp(-d/w,0.,1.);return sqrt(1.-(1.-t)*(1.-t));}
 float waves(vec2 p){float w=0.;
  for(int i=0;i<6;i++){vec4 R=uRip[i];if(R.w>0.){float x=length(p-R.xy)-R.z*240.;w+=R.w*exp(-R.z*1.7)*sin(x*.3)*exp(-x*x/700.);}}
  vec2 m=p-uMouse.xy;w+=uMouse.z*3.6*exp(-dot(m,m)/1000.);
  w+=uAmb*(sin(p.x*.05+uTime*1.2)*.45+sin(p.x*.13-uTime*.85+p.y*.2)*.25);return w;}
-float H(vec2 p){float dp=pillD(p);return lens(dp,uPill.w*.36)*2.4+lens(dropD(p),11.)*7.5+waves(p)*smoothstep(0.,7.,-dp);}
+float H(vec2 p){float dp=pillD(p);return (1.-uBare)*lens(dp,min(uPill.z,uPill.w)*.36)*2.4+lens(dropD(p),11.)*7.5+waves(p)*smoothstep(0.,7.,-dp);}
 float caus(vec2 p,float t){vec2 q=p;float c=0.;for(int i=0;i<3;i++){q+=vec2(sin(q.y*1.1+t),cos(q.x*1.3-t*.7))*.6;c+=1./(1.+16.*abs(sin(q.x)*sin(q.y)));}return c/3.;}
 void main(){
  vec2 p=vec2(gl_FragCoord.x,uRes.y*uDpr-gl_FragCoord.y)/uDpr;
@@ -218,7 +232,7 @@ function initGL(canvas: HTMLCanvasElement) {
   gl.enableVertexAttribArray(loc)
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
   const u: Record<string, WebGLUniformLocation | null> = {}
-  for (const n of ["uRes", "uDpr", "uTime", "uPill", "uBlob", "uSy", "uRip", "uMouse", "uDark", "uAmb"]) u[n] = gl.getUniformLocation(p, n)
+  for (const n of ["uRes", "uDpr", "uTime", "uPill", "uBlob", "uSy", "uRip", "uMouse", "uDark", "uAmb", "uBare", "uPillR"]) u[n] = gl.getUniformLocation(p, n)
   return { gl, u }
 }
 
@@ -237,6 +251,9 @@ export function LiquidNavbar({
   compact,
   sound = false,
   ariaLabel = "Main",
+  orientation = "horizontal",
+  bare = false,
+  ambient = "always",
   className,
   style,
 }: LiquidNavbarProps) {
@@ -255,13 +272,18 @@ export function LiquidNavbar({
   const dark = tone === "dark" ? 1 : 0
   const darkRef = React.useRef(dark)
   darkRef.current = dark
+  const vertical = orientation === "vertical"
+  const opt = React.useRef({ vertical, bare, ambient })
+  opt.current = { vertical, bare, ambient }
 
   /* ---- drawing ---- */
   const draw = React.useCallback(() => {
+    const o = opt.current
     const s = st.current
     const T = s.t
     const sep = Math.abs(s.a.x - s.b.x)
-    const thin = Math.min(sep / (2 * (s.q + T.r) || 1), 1)
+    const half = o.vertical ? T.r : s.q + T.r // drop half-size along the motion axis
+    const thin = Math.min(sep / (2 * half || 1), 1)
     const r = T.r * (1 - 0.3 * thin)
     if (s.glc) {
       const { gl: g, u } = s.glc
@@ -271,12 +293,20 @@ export function LiquidNavbar({
       g.uniform1f(u.uDpr, dpr)
       g.uniform1f(u.uTime, s.time)
       g.uniform4f(u.uPill, PAD, PAD, s.w, s.h)
+      g.uniform1f(u.uBare, o.bare ? 1 : 0)
+      g.uniform1f(u.uPillR, o.vertical ? 24 : 9999)
       const blobs = new Float32Array(24)
       const sy = new Float32Array(6).fill(1)
       const head = s.lead === 0 ? s.a : s.b, tail = s.lead === 0 ? s.b : s.a
-      blobs.set([head.x, T.cy, s.q * (1 - 0.25 * thin), T.r * (1 - 0.12 * thin), tail.x, T.cy, s.q * (1 - 0.8 * thin), T.r * (1 - 0.5 * thin)], 0)
-      sy[0] = sy[1] = s.sy.s
-      s.sats.slice(0, 4).forEach((d, i) => blobs.set([d.x, d.y, 0, d.r], 8 + i * 4))
+      if (o.vertical) {
+        // physics runs along one axis; vertical swaps it onto y, the drop stays wide across the row
+        blobs.set([T.cy, head.x, s.q * (1 - 0.1 * thin), T.r * (1 - 0.12 * thin), T.cy, tail.x, s.q * (1 - 0.35 * thin), T.r * (1 - 0.5 * thin)], 0)
+        s.sats.slice(0, 4).forEach((d, i) => blobs.set([d.y, d.x, 0, d.r], 8 + i * 4))
+      } else {
+        blobs.set([head.x, T.cy, s.q * (1 - 0.25 * thin), T.r * (1 - 0.12 * thin), tail.x, T.cy, s.q * (1 - 0.8 * thin), T.r * (1 - 0.5 * thin)], 0)
+        sy[0] = sy[1] = s.sy.s
+        s.sats.slice(0, 4).forEach((d, i) => blobs.set([d.x, d.y, 0, d.r], 8 + i * 4))
+      }
       g.uniform4fv(u.uBlob, blobs)
       g.uniform1fv(u.uSy, sy)
       const rips = new Float32Array(24)
@@ -284,22 +314,31 @@ export function LiquidNavbar({
       g.uniform4fv(u.uRip, rips)
       g.uniform3f(u.uMouse, s.mouse.x, s.mouse.y, s.mouse.s)
       g.uniform1f(u.uDark, darkRef.current)
-      g.uniform1f(u.uAmb, s.reduce ? 0 : 1)
+      g.uniform1f(u.uAmb, s.reduce ? 0 : o.ambient === "always" ? 1 : s.mouse.s)
       g.clearColor(0, 0, 0, 0)
       g.clear(g.COLOR_BUFFER_BIT)
       g.drawArrays(g.TRIANGLES, 0, 3)
     } else if (dropRef.current) {
-      const left = Math.min(s.a.x, s.b.x) - s.q - r - PAD
-      const width = sep + 2 * (s.q + r)
-      dropRef.current.style.width = `${width}px`
-      dropRef.current.style.transform = `translateX(${left}px) scaleY(${s.sy.s})`
+      const ext = o.vertical ? r : s.q + r
+      const start = Math.min(s.a.x, s.b.x) - ext - PAD
+      const size = sep + 2 * ext
+      if (o.vertical) {
+        dropRef.current.style.height = `${size}px`
+        dropRef.current.style.transform = `translateY(${start}px)`
+      } else {
+        dropRef.current.style.width = `${size}px`
+        dropRef.current.style.transform = `translateX(${start}px) scaleY(${s.sy.s})`
+      }
     }
   }, [])
 
   /* ---- physics ---- */
   const step = React.useCallback((dt: number, now: number) => {
+    const o = opt.current
     const s = st.current
     const T = s.t
+    const inset = o.bare ? 0 : 6
+    const len = o.vertical ? s.h : s.w
     s.time += dt
     s.q += (T.q - s.q) * Math.min(1, dt * 12)
     const bodies = [s.a, s.b]
@@ -314,7 +353,8 @@ export function LiquidNavbar({
         const f = !lead && now < s.lagFrom ? 0.08 : 1
         B.v += (k * (T.x - B.x) - c * B.v) * dt * f
         B.x += B.v * dt
-        const lo = PAD + 6 + s.q + T.r - 3, hi = PAD + s.w - 6 - s.q - T.r + 3
+        const half = o.vertical ? T.r : s.q + T.r
+        const lo = PAD + inset + half - 3, hi = PAD + len - inset - half + 3
         if (B.x < lo || B.x > hi) {
           s.sy.v -= Math.min(Math.abs(B.v), 900) * 0.0016
           B.x = Math.max(lo, Math.min(hi, B.x))
@@ -329,8 +369,11 @@ export function LiquidNavbar({
       if (Math.abs(s.sy.s - 1) > 0.002 || Math.abs(s.sy.v) > 0.02) still = false
       // break the neck: spawn droplets between head and tail
       const sep = Math.abs(s.a.x - s.b.x)
-      const r = T.r * (1 - 0.3 * Math.min(sep / (2 * (T.q + T.r) || 1), 1))
-      if (!s.split && s.moving && sep - 2 * T.q - 2 * r > -6) {
+      const halfT = o.vertical ? T.r : T.q + T.r
+      const r = T.r * (1 - 0.3 * Math.min(sep / (2 * halfT || 1), 1))
+      // vertical rows are short, so only jumps of 2+ rows break into droplets
+      const breaks = o.vertical ? sep > 3 * T.r : sep - 2 * T.q - 2 * r > -6
+      if (!s.split && s.moving && breaks) {
         s.split = true
         const lo = bodies[1 - s.lead], hi = bodies[s.lead]
         ;[0.3, 0.5, 0.72].forEach((t, j) => {
@@ -349,16 +392,18 @@ export function LiquidNavbar({
         d.vy += (90 * (T.cy - d.y) - 7 * d.vy) * dt
         d.x += d.vx * dt
         d.y += d.vy * dt
-        d.x = Math.max(PAD + 8 + d.r, Math.min(PAD + s.w - 8 - d.r, d.x))
-        d.y = Math.max(T.cy - T.r + d.r, Math.min(T.cy + T.r - d.r, d.y))
-        if (Math.abs(T.x - d.x) < T.q + T.r * 0.5) d.r -= dt * 26
+        const crossHalf = o.vertical ? T.q + T.r : T.r
+        d.x = Math.max(PAD + 8 + d.r, Math.min(PAD + len - 8 - d.r, d.x))
+        d.y = Math.max(T.cy - crossHalf + d.r, Math.min(T.cy + crossHalf - d.r, d.y))
+        if (Math.abs(T.x - d.x) < (o.vertical ? T.r * 0.8 : T.q + T.r * 0.5)) d.r -= dt * 26
         return d.r > 0.6
       })
       if (s.sats.length) still = false
     }
     if (s.moving && still) {
       s.moving = false
-      if (s.split || !s.reduce) s.rips.push({ x: T.x, y: T.cy, age: 0, amp: s.split ? 1.2 : 0.7 })
+      const amp = s.split ? 1.2 : 0.7
+      if (s.split || !s.reduce) s.rips.push(o.vertical ? { x: T.cy, y: T.x, age: 0, amp } : { x: T.x, y: T.cy, age: 0, amp })
     }
     s.rips.forEach((p) => (p.age += dt))
     s.rips = s.rips.filter((p) => p.age < 2.4)
@@ -377,7 +422,8 @@ export function LiquidNavbar({
       draw()
       const busy = s.moving || s.rips.length || s.sats.length || s.mouse.s > 0.01
       // ambient water keeps moving while visible; reduced-motion only animates on change
-      if (s.visible && (!s.reduce || busy)) s.raf = requestAnimationFrame(tick)
+      const always = opt.current.ambient === "always" && !s.reduce
+      if (s.visible && (always || busy)) s.raf = requestAnimationFrame(tick)
       else s.raf = 0
     }
     s.raf = requestAnimationFrame(tick)
@@ -394,8 +440,9 @@ export function LiquidNavbar({
     const T = s.t
     T.r = el.offsetHeight / 2
     T.q = Math.max(0, el.offsetWidth / 2 - T.r)
-    T.cy = PAD + el.offsetTop + el.offsetHeight / 2
-    const nx = PAD + el.offsetLeft + el.offsetWidth / 2
+    const v = opt.current.vertical
+    T.cy = v ? PAD + el.offsetLeft + el.offsetWidth / 2 : PAD + el.offsetTop + el.offsetHeight / 2 // cross-axis centre
+    const nx = v ? PAD + el.offsetTop + el.offsetHeight / 2 : PAD + el.offsetLeft + el.offsetWidth / 2 // along the motion axis
     if (!s.ready) {
       s.a.x = s.b.x = nx
       s.q = T.q
@@ -508,9 +555,10 @@ export function LiquidNavbar({
   }
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return
+    const next = vertical ? "ArrowDown" : "ArrowRight", prev = vertical ? "ArrowUp" : "ArrowLeft"
+    if (e.key !== next && e.key !== prev) return
     e.preventDefault()
-    const n = (current + (e.key === "ArrowRight" ? 1 : -1) + items.length) % items.length
+    const n = (current + (e.key === next ? 1 : -1) + items.length) % items.length
     select(n)
     itemRefs.current[n]?.focus()
   }
@@ -533,6 +581,8 @@ export function LiquidNavbar({
       data-gl={gl}
       data-compact={compact === undefined ? undefined : String(compact)}
       data-refract={refract ? "on" : "off"}
+      data-orient={vertical ? "vertical" : undefined}
+      data-bare={bare ? "true" : undefined}
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
       onPointerMove={onMove}
