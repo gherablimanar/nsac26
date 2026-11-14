@@ -1,5 +1,7 @@
 # HALO conversational assistant
 
+**Azure setup:** see [AZURE.md](AZURE.md) for Microsoft Foundry, the credit offer and provider configuration.
+
 This implementation replaces the earlier sentence-ordering experiment. An existing
 language model generates answers to the user's question from a small retrieved
 reference library and the selected crew's assessment. It is **not a trained clinical
@@ -17,7 +19,7 @@ model**, a validated medical device, or an autonomous flight surgeon.
    use the last two user questions for short follow-ups. It is not full-text paper
    search. Unsupported questions explicitly abstain.
 3. With explicit session consent and server configuration, the OpenAI Chat Completions
-   endpoint receives the question, at most six prior conversation turns, relevant
+   endpoint (Azure OpenAI or direct OpenAI, selected server-side) receives the question, at most six prior conversation turns, relevant
    passages with population/limitations, and the selected crew/day's simulated
    measurements, baseline comparisons and rule results. Direct crew identifiers and
    names are omitted from the context; identifiers typed by the user are not redacted.
@@ -40,7 +42,7 @@ prototype service-token access to fictional records.
 
 ## Enable and verify locally
 
-From the repository root, copy `.env.example` to `.env` and set:
+For Azure, use [AZURE.md](AZURE.md). For direct OpenAI, copy the root `.env.example` to `.env`, set `AI_PROVIDER=openai`, and set:
 
 - `AI_API_KEY`: a project-scoped OpenAI API key, stored only on the API server.
 - `HALO_MODEL`: a model ID available to that project that supports Chat Completions

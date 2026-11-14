@@ -12,21 +12,34 @@ import {
 } from "./assistant-model.ts";
 import { triage, medicationAdvice } from "../../src/shared/triage.ts";
 import { UNITS } from "./contracts.ts";
+import { resolveModelConfig, ModelConfigurationError } from "./model-config.ts";
 export { triage } from "../../src/shared/triage.ts";
 export type AssistantInput = z.input<typeof Ask>;
 export const ASSISTANT_VERSION = "halo-rag-1.0";
 
 export function assistantStatus(options: ModelOptions = {}) {
-  const configured = Boolean(options.apiKey && options.model);
+  let configured = false;
+  let status = "not_configured";
+  let message = "Hosted AI is not configured.";
+  try {
+    resolveModelConfig(options);
+    configured = true;
+    status = "configured_not_verified";
+    message =
+      "Server configured. A successful answer is needed to verify model access.";
+  } catch (error) {
+    if (error instanceof ModelConfigurationError) {
+      status = error.status;
+      message = error.message;
+    }
+  }
   return {
     configured,
-    provider: "openai",
+    provider: options.provider ?? "openai",
     model: configured ? options.model : null,
     providerVerified: false,
-    status: configured ? "configured_not_verified" : "not_configured",
-    message: configured
-      ? "Server configured. A successful answer is needed to verify model access."
-      : "Hosted AI is not configured. Add AI_API_KEY and HALO_MODEL on the API server; never in browser code.",
+    status,
+    message,
     evidenceSources: evidence.length,
     evidenceReview: "domain_review_pending",
     requiresConsent: true,
@@ -120,7 +133,8 @@ export async function answer(
   }));
   if (t.urgent || medication) modelStatus = "safety_bypass";
   else if (input.allowAI) {
-    if (!options.apiKey || !options.model) modelStatus = "not_configured";
+    const configuration = assistantStatus(options);
+    if (!configuration.configured) modelStatus = configuration.status;
     else if (insufficientEvidence) modelStatus = "insufficient_evidence";
     else {
       try {
@@ -148,7 +162,7 @@ export async function answer(
             },
             evidence: relevant,
           },
-          { apiKey: options.apiKey, model: options.model },
+          options,
         );
         const ids = new Set(relevant.map((p) => p.id));
         const keys = new Set([

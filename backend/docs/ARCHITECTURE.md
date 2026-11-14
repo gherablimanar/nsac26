@@ -21,7 +21,7 @@ See [assistant architecture and setup](ASSISTANT.md). Report sending
 is never a side effect of asking the assistant. Draft approval and queue simulation are
 separate operations. SQLite idempotency prevents duplicate queue records on retries.
 
-External connections use a fixed NASA endpoint and fixed OpenAI endpoint. Client input
+External connections use a fixed NASA endpoint and fixed direct OpenAI endpoint or a server-configured, validated Azure OpenAI resource endpoint. Azure keys are not forwarded through redirects and no automatic cross-provider failover occurs. Client input
 cannot supply remote URLs. NASA requests are <=1 hour, timeout after15seconds, and bound
 response memory to1MB. Bad upstream responses preserve the earlier cache. All units and
 observation timestamps survive normalization; naive timestamps are labelled as assumed UTC.

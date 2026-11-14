@@ -106,7 +106,9 @@ fabricated confidence interval is emitted (`range` is null).
   No Gy-to-Sv conversion or assignment of instrument exposure to a person is inferred.
 - Medication strength is **unknown**. Product-specific potency forecasting is unavailable;
   invented general degradation coefficients and use-first recommendations were removed from the active UI.
-- Hosted AI needs `AI_API_KEY`, `HALO_MODEL` and explicit session consent. It generates
+- Hosted AI supports Azure OpenAI (`AI_PROVIDER=azure`, `AZURE_OPENAI_ENDPOINT`,
+  `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_KEY`) and direct OpenAI (`AI_PROVIDER=openai`,
+  `AI_API_KEY`, `HALO_MODEL`), with explicit session consent. See [Azure setup](docs/AZURE.md). It generates
   question-specific answers from retrieved authored evidence summaries and the selected
   crew assessment, with linked citations and explicit fallback modes. Generated text can
   be wrong; citation checks do not prove support or clinical correctness. Automated tests

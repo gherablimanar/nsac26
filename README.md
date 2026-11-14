@@ -66,3 +66,5 @@ frontend assets and simulator are retained; the backend/scoring integrations are
 on this branch. Branch changes should be reviewed before any merge to main.
 
 Hosted assistant setup, live verification and deployment: [backend/docs/ASSISTANT.md](backend/docs/ASSISTANT.md).
+
+Azure OpenAI and the credit-offer setup: [backend/docs/AZURE.md](backend/docs/AZURE.md).

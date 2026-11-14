@@ -28,12 +28,11 @@ import { answer, assistantStatus } from "./assistant.ts";
 import { evidence, evidenceBundle, protocols } from "./evidence.ts";
 import { radiationCache, fetchRadiation } from "./radiation.ts";
 import type { MissionProfile, Reading } from "../../src/engine/types.ts";
-export type Options = {
+import type { ModelOptions } from "./model-config.ts";
+export type Options = ModelOptions & {
   dbPath?: string;
   apiToken?: string;
   now?: () => number;
-  model?: string;
-  apiKey?: string;
   datasetPath?: string;
 };
 const PROFILES = {

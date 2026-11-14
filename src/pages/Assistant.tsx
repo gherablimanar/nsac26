@@ -38,15 +38,31 @@ const modelLabel = (r: AssistantReply) =>
     ? "AI-generated answer · check the cited sources"
     : r.modelStatus === "not_configured"
       ? "AI not configured · reference fallback"
-      : r.modelStatus === "failed_using_offline_fallback"
-        ? "AI request failed · reference fallback"
-        : r.modelStatus === "insufficient_evidence"
-          ? "Insufficient evidence · model not called"
-          : r.modelStatus === "not_requested"
-            ? "Hosted AI is off · reference fallback"
-            : r.modelStatus === "safety_bypass"
-              ? "Safety response · model not called"
-              : "Backend unavailable · offline fallback";
+      : r.modelStatus === "invalid_configuration"
+        ? "AI configuration invalid · reference fallback"
+        : r.modelStatus === "failed_using_offline_fallback"
+          ? "AI request failed · reference fallback"
+          : r.modelStatus === "insufficient_evidence"
+            ? "Insufficient evidence · model not called"
+            : r.modelStatus === "not_requested"
+              ? "Hosted AI is off · reference fallback"
+              : r.modelStatus === "safety_bypass"
+                ? "Safety response · model not called"
+                : "Backend unavailable · offline fallback";
+
+const failureHelp: Record<string, string> = {
+  authentication_error:
+    "The AI service rejected authentication. Ask the administrator to check the server credential.",
+  access_denied:
+    "AI access was denied. The administrator needs to check resource access and subscription eligibility.",
+  deployment_not_found:
+    "The configured AI deployment was not found. Ask the administrator to check the deployment name and resource endpoint.",
+  rate_limit_or_quota:
+    "The AI service reported a request limit or quota issue. Wait before retrying or ask the administrator to check quota.",
+  unsupported_request:
+    "The AI service rejected this request format. The administrator needs to check model compatibility.",
+  timeout: "The AI request timed out. A reference fallback is shown.",
+};
 
 export function Assistant({ crewId, day, delay, urgent }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -264,6 +280,12 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
                     HALO
                   </div>
                   <p className={s.answerMode}>{modelLabel(m.reply!)}</p>
+                  {m.reply?.failureReason &&
+                    failureHelp[m.reply.failureReason] && (
+                      <p className={s.answerLimit}>
+                        {failureHelp[m.reply.failureReason]}
+                      </p>
+                    )}
                   {m.reply?.paragraphs?.length ? (
                     m.reply.paragraphs.map((p, i) => (
                       <div key={i}>
@@ -401,8 +423,13 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
             </label>
             <p className={s.answerLimit}>
               When enabled, your question, up to six recent conversation turns
-              and the selected crew’s simulated assessment are sent to OpenAI.
-              Names are omitted; avoid personal identifiers in questions. No
+              and the selected crew’s simulated assessment are sent to{" "}
+              {status?.provider === "azure"
+                ? "Azure OpenAI (Microsoft Azure)"
+                : status?.provider === "openai"
+                  ? "OpenAI"
+                  : "the configured AI provider (Azure OpenAI or OpenAI)"}
+              . Names are omitted; avoid personal identifiers in questions. No
               flight-surgeon message is sent.
             </p>
           </section>

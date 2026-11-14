@@ -1,15 +1,22 @@
 import { makeServer } from "./node/app.ts";
+import {
+  modelOptionsFromEnv,
+  resolveModelConfig,
+} from "./node/model-config.ts";
 // This is an intentional live provider check, not a mocked test. It may incur API usage.
-if (!process.env.AI_API_KEY || !process.env.HALO_MODEL) {
+let modelOptions;
+try {
+  modelOptions = modelOptionsFromEnv();
+  resolveModelConfig(modelOptions);
+} catch (error) {
   process.stderr.write(
-    "LIVE AI NOT TESTED: set AI_API_KEY and HALO_MODEL on the server, then rerun npm run check:ai.\n",
+    `LIVE AI NOT TESTED: ${error instanceof Error ? error.message : "Invalid model configuration."}\n`,
   );
   process.exit(2);
 }
 const app = await makeServer({
   dbPath: ":memory:",
-  apiKey: process.env.AI_API_KEY,
-  model: process.env.HALO_MODEL,
+  ...modelOptions,
 });
 try {
   const response = await app.inject({
@@ -28,6 +35,7 @@ try {
     JSON.stringify(
       {
         httpStatus: response.statusCode,
+        provider: modelOptions.provider,
         mode: body.mode,
         modelStatus: body.modelStatus,
         failureReason: body.failureReason,

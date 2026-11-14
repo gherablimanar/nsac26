@@ -378,7 +378,7 @@ for (const [name, response, reason] of [
   [
     "HTTP failure",
     () => new Response("bad-key-secret", { status: 401 }),
-    "provider_error",
+    "authentication_error",
   ],
   [
     "timeout",
