@@ -1,0 +1,6 @@
+.card { background: var(--card); border-radius: var(--radius-card); padding: 24px 26px; }
+.head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.head h2 { margin: 0; font-size: 15px; font-weight: 500; }
+.head span, .head a, .head button { font-size: 14px; color: var(--ink-2); }
+.head a, .head button { text-decoration: none; font-weight: 500; background: none; border: 0; padding: 0; cursor: pointer; }
+.head a:hover, .head button:hover { text-decoration: underline; }

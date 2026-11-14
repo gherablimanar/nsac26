@@ -1,0 +1,50 @@
+/* HALO design tokens. Every colour, font and radius comes from here.
+   Two looks: "field" (default, soft colour field) and "plain" (plain white, chosen in Settings). */
+:root {
+  --page: #ECEEF2;
+  --card: #FCFCFD;
+  --ink: #10131A;
+  --ink-2: #555C6B;
+  --ink-on-field: #3E4452;
+
+  /* Status: colour only where attention is needed */
+  --watch-ink: #7A4300;
+  --watch-mark: #E08A1E;
+  --act: #B42B23;
+  --act-hover: #962018;
+  --unknown: #7A8292;
+  --figure: #DDE1E8;
+
+  /* Chart */
+  --line-in: #555C6B;
+  --line-out: #9A4A00;
+  --band: rgba(255, 255, 255, 0.55);
+
+  --radius-panel: 36px;
+  --radius-card: 28px;
+  --radius-control: 14px;
+
+  --sans: "Geist Sans", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+
+  --side-w: 216px;
+  --gutter: 24px;
+}
+
+[data-look="plain"] {
+  --page: #FFFFFF;
+  --card: #F5F6F8;
+  --ink-on-field: #555C6B;
+  --line-in: #6E7686;
+  --line-out: #A35C00;
+  --watch-ink: #8A4F00;
+  --band: rgba(129, 216, 208, 0.28);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--page); color: var(--ink); font: 15px/1.5 var(--sans); }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }

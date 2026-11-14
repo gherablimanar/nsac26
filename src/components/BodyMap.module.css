@@ -1,0 +1,17 @@
+.layout { display: grid; grid-template-columns: 80px 1fr; gap: 20px; align-items: center; }
+.figure { width: 80px; height: auto; overflow: visible; }
+
+/* Regions: base body and head in figure grey, organs slightly darker, colour only for status */
+.region { cursor: pointer; fill: var(--figure); outline: none; }
+.region[data-part="organ"] { fill: #BEC5D1; }
+.region:hover, .region:focus-visible { stroke: var(--ink); stroke-width: 1.5; }
+.region.watch, .region.watch[data-part="organ"] { fill: var(--watch-mark); }
+.region.act, .region.act[data-part="organ"] { fill: var(--act); }
+.region.unknown { fill: none; stroke: var(--unknown); stroke-width: 1.5; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.row { width: 100%; display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border: 0; background: none; font-size: 14px; text-align: left; cursor: pointer; }
+.row span { color: var(--ink-2); }
+.row:hover { text-decoration: underline; text-underline-offset: 3px; }
+.row.watch, .row.watch span { color: var(--watch-ink); font-weight: 500; }
+.row.act, .row.act span { color: var(--act); font-weight: 500; }
