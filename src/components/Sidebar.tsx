@@ -1,8 +1,6 @@
-import { useRef } from "react";
 import { Books, ChatCircleText, GearSix, Heartbeat, NotePencil, Pill, Planet, SquaresFour, type Icon } from "@phosphor-icons/react";
-import glass from "./Glass.module.css";
+import { LiquidGlass } from "./ui/apple-tahoe-liquid-glass-button";
 import s from "./Sidebar.module.css";
-import { useShine } from "./useShine";
 
 export type Page = "overview" | "health" | "log" | "assistant" | "mission" | "medicines" | "evidence" | "settings";
 
@@ -20,8 +18,6 @@ const UTIL: { id: Page; label: string; icon: Icon }[] = [
 ];
 
 export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
-  const ref = useRef<HTMLElement>(null);
-  useShine(ref);
   const item = ({ id, label, icon: I }: (typeof MAIN)[number]) => (
     <a key={id} href={`#${id}`} className={s.item} aria-current={page === id ? "page" : undefined}
       onClick={(e) => { e.preventDefault(); onNavigate(id); }}>
@@ -29,7 +25,8 @@ export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page
     </a>
   );
   return (
-    <aside ref={ref} className={`${glass.glass} ${s.side}`}>
+    <LiquidGlass asChild material="regular" refraction={28}>
+    <aside className={s.side}>
       <div className={s.brand}>
         <svg viewBox="0 0 26 14" fill="none" aria-hidden="true"><ellipse cx="13" cy="7" rx="11.5" ry="5" stroke="currentColor" strokeWidth="2" /></svg>
         <span>HALO</span>
@@ -40,5 +37,6 @@ export function Sidebar({ page, onNavigate }: { page: Page; onNavigate: (p: Page
         <p className={s.proto}>Prototype, not a medical device</p>
       </div>
     </aside>
+    </LiquidGlass>
   );
 }

@@ -1,10 +1,9 @@
-import { useRef, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { FirstAid } from "@phosphor-icons/react";
 import type { CrewMember, MissionProfile } from "../engine/types.ts";
 import { LiquidNavbar } from "./ui/liquid-glass-navbar";
-import glass from "./Glass.module.css";
+import { LiquidGlass } from "./ui/apple-tahoe-liquid-glass-button";
 import s from "./TopBar.module.css";
-import { useShine } from "./useShine";
 
 const MISSION: Record<MissionProfile, { name: string; delay: string | null }> = {
   mars_transit: { name: "Mars transit", delay: "18 min" }, // DEMO: one-way light time varies, up to ~20 min
@@ -37,19 +36,19 @@ type Props = {
 };
 
 export function TopBar({ profile, day, crew, selected, onSelect, onUrgentHelp }: Props) {
-  const infoRef = useRef<HTMLDivElement>(null);
-  useShine(infoRef);
   const m = MISSION[profile];
 
   return (
     <header className={s.top}>
-      <div ref={infoRef} className={`${glass.glass} ${s.info}`}>
+      <LiquidGlass asChild material="regular">
+      <div className={s.info}>
         <span><span className={`mono ${s.day}`}>Day {day}</span>&nbsp;&nbsp;<span className={s.dim}>{m.name}</span></span>
         <span className={`${s.dim} ${s.push}`}>Synced 3 min ago</span>
         <span className={s.dim}>
           {m.delay ? <>Houston hears you in <span className="mono">{m.delay}</span></> : "Live link to Houston"}
         </span>
       </div>
+      </LiquidGlass>
       <LiquidNavbar
         ariaLabel="Astronaut"
         tone="light"

@@ -13,6 +13,7 @@
 }
 .info {
   position: relative;
+  isolation: isolate;
   flex: 1;
   min-width: 0;
   height: 56px;

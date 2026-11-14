@@ -1,4 +1,7 @@
 .side {
+  position: fixed;
+  z-index: 10;
+  isolation: isolate;
   left: var(--gutter);
   top: var(--gutter);
   bottom: var(--gutter);
