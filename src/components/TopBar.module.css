@@ -1,0 +1,51 @@
+/* Three floating capsules instead of one bar, so glass never sits on glass:
+   mission info (glass), the crew water pill, and the solid Urgent help button. */
+.top {
+  position: fixed;
+  z-index: 10;
+  left: calc(var(--gutter) * 2 + var(--side-w) - 8px);
+  right: var(--gutter);
+  top: var(--gutter);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.info {
+  position: relative;
+  background: var(--card);
+  border: 1px solid rgba(16, 19, 26, 0.06);
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+.day { font-weight: 500; }
+.dim { color: var(--ink-2); }
+.push { margin-left: auto; }
+
+.help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--act);
+  color: #FFFFFF;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.help:hover { background: var(--act-hover); }
+
+@media (max-width: 1279px) {
+  .top { left: 116px; }
+  .push { display: none; }
+}

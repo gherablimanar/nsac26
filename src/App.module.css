@@ -1,0 +1,9 @@
+.main {
+  position: relative;
+  z-index: 1;
+  margin-left: calc(var(--gutter) + var(--side-w) + 16px);
+  padding: 112px 40px 48px 20px;
+}
+@media (max-width: 1279px) {
+  .main { margin-left: 116px; padding-left: 0; padding-right: 24px; }
+}

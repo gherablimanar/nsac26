@@ -1,0 +1,11 @@
+.wrap { display: flex; flex-direction: column; gap: 10px; }
+.row { display: grid; grid-template-columns: 176px 1fr; align-items: start; }
+.label { display: flex; flex-direction: column; padding-top: 2px; }
+.label span { font-size: 14px; color: var(--ink-on-field); }
+.label b { font-size: 22px; font-weight: 400; line-height: 1.2; }
+.label small { font-family: var(--sans); font-size: 13px; color: var(--ink-on-field); margin-left: 6px; }
+.label .bad { color: var(--watch-ink); }
+.plot { min-width: 0; }
+.tick { stroke: var(--ink); stroke-opacity: 0.28; stroke-width: 1.25; stroke-linecap: round; }
+.tickMajor { stroke: var(--ink); stroke-opacity: 0.7; stroke-width: 2; stroke-linecap: round; }
+.axis { font-family: var(--mono); font-size: 12px; fill: var(--ink-on-field); }

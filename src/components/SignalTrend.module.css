@@ -1,0 +1,11 @@
+.card { padding: 20px 24px 12px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
+.label { margin: 0; font-size: 15px; font-weight: 500; }
+.now { text-align: right; }
+.value { font-size: 28px; line-height: 1.15; font-weight: 500; }
+.value small { margin-left: 4px; font-size: 14px; font-weight: 400; color: var(--ink-2); }
+.value.out { color: var(--watch-ink); }
+.normal { margin: 2px 0 0; font-size: 13px; color: var(--ink-2); }
+.outside { margin: 0; font-size: 13px; color: var(--watch-ink); }
+.plot { height: 120px; }
+.tick { font-family: var(--mono); font-size: 12px; fill: #555C6B; }

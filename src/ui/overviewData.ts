@@ -1,0 +1,87 @@
+// Builds what the Overview shows for one astronaut on one mission day.
+// Bands and drift come from the engine (src/engine/baseline.ts). The priority risk text and the
+// task list are MOCK until the coupling rules in src/rules exist.
+import { bandCentreAt, computeBaselines, computeDrift } from "../engine/baseline.ts";
+import { SIGNAL_BY_KEY } from "../engine/signals.ts";
+import { historyOf, readingOn } from "../data/crew.ts";
+import type { BodySystem, LinkedSeries, OverviewModel, PriorityRisk, ReadingSummary, Task } from "./viewTypes.ts";
+import { SYSTEMS, systemStatus } from "./systems.ts";
+
+// MOCK: what the kidney-stone coupling rule (brief p. 7, Siew et al. 2024) would return for Marco.
+const RISKS: Record<string, PriorityRisk> = {
+  C2: {
+    title: "Kidney stone risk is rising",
+    level: "watch",
+    sinceDay: 55,
+    why: "Your fluid intake fell by half on Day 55. Since then your urine has darkened, you are eating more salt, and your bone breakdown marker keeps climbing. Together, that is how kidney stones form in microgravity.",
+    action: "Drink 500 ml more today",
+    signals: ["fluid_intake_ml", "urine_color_1to8", "sodium_mg", "bone_resorption_index"],
+    eventDay: 55,
+    eventLabel: "intake dropped",
+    otherRisks: ["cognitive readiness", "bone and muscle loss", "fluid shift", "solar storm"],
+  },
+};
+
+// MOCK: the day's routine until a schedule source exists.
+const TASKS: Task[] = [
+  { id: "urine", label: "Log urine colour", when: "Before sleep", done: false },
+  { id: "workout", label: "Resistance workout", done: true },
+  { id: "reaction", label: "Reaction test", when: "3 minutes, before 18:00", done: false },
+];
+
+const SHORT_LABEL: Record<string, string> = { bone_resorption_index: "Bone breakdown", sodium_mg: "Sodium intake" };
+
+function display(key: string, v: number): { now: string; unit: string } {
+  switch (key) {
+    case "fluid_intake_ml": return { now: (v / 1000).toFixed(2), unit: "L" };
+    case "urine_color_1to8": return { now: String(Math.round(v)), unit: "of 8" };
+    case "sodium_mg": return { now: Math.round(v).toLocaleString("en-US"), unit: "mg" };
+    default: return { now: String(Math.round(v)), unit: SIGNAL_BY_KEY[key]?.unit ?? "" };
+  }
+}
+
+export function buildOverview(crewId: string, day: number): OverviewModel {
+  const history = historyOf(crewId);
+  const bands = computeBaselines(history);
+  const drift = computeDrift(history, bands, day);
+  const risk = RISKS[crewId] ?? null;
+
+  const from = day - 14;
+  const series: LinkedSeries[] = (risk?.signals ?? []).map((key) => {
+    const b = bands[key];
+    const bad = SIGNAL_BY_KEY[key]?.badDirection ?? 0;
+    const rows = history.filter((r) => r.day >= from && r.day <= day);
+    const pts = rows.map((r) => {
+      const value = r[key as keyof typeof r] as number;
+      const c = bandCentreAt(b, r.day);
+      const band: [number, number] = [c - 2 * b.sd, c + 2 * b.sd];
+      const isOut = bad < 0 ? value < band[0] : bad > 0 ? value > band[1] : value < band[0] || value > band[1];
+      return { day: r.day, value, band, isOut };
+    });
+    // A segment is drawn amber when it ends outside the band, so include its start point too.
+    const points = pts.map((p, i) => ({
+      day: p.day, value: p.value, band: p.band,
+      out: p.isOut || pts[i + 1]?.isOut ? p.value : null,
+    }));
+    const last = pts[pts.length - 1];
+    return { key, label: SHORT_LABEL[key] ?? SIGNAL_BY_KEY[key]?.label ?? key, ...display(key, last.value), outNow: last.isOut, points };
+  });
+
+  const statusText = { normal: "Normal", watch: "Watch", act: "Act", unknown: "No reading yet" } as const;
+  const systems: BodySystem[] = SYSTEMS.map((def) => {
+    const status = systemStatus(def, drift);
+    return { id: def.id, label: def.label, status, detail: statusText[status] };
+  });
+
+  const today = readingOn(crewId, day);
+  const range = (k: string, digits = 0) => `${drift[k].bandLo.toFixed(digits)}-${drift[k].bandHi.toFixed(digits)}`;
+  const out = (k: string) => drift[k]?.status !== "inside band";
+  const readings: ReadingSummary[] = today ? [
+    { label: "Heart rate", value: String(today.heart_rate), unit: "bpm", note: `Your normal ${range("heart_rate")}`, out: out("heart_rate") },
+    { label: "Blood pressure", value: `${today.bp_sys}/${today.bp_dia}`, note: `Your normal ${range("bp_sys")} / ${range("bp_dia")}`, out: out("bp_sys") || out("bp_dia") },
+    { label: "Sleep last night", value: today.sleep_hours.toFixed(1), unit: "h", note: `Your normal ${range("sleep_hours", 1)}`, out: out("sleep_hours") },
+    { label: "Radiation today", value: today.radiation_mSv_today.toFixed(2), unit: "mSv", note: `${Math.round(today.radiation_mSv_total)} mSv this mission`, out: out("radiation_mSv_today") },
+  ] : [];
+
+  return { risk, series, tasks: TASKS, systems, readings };
+}

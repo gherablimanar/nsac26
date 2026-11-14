@@ -1,0 +1,43 @@
+.title { margin: 0 0 8px; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; }
+.sub { margin: 0 0 24px; font-size: 15px; color: var(--ink-2); }
+.grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+.pharm { grid-column: 1 / -1; }
+
+.list { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 16px; align-items: baseline; }
+.time { color: var(--ink); }
+.what { display: flex; flex-direction: column; }
+.what b { font-weight: 500; }
+.what span { color: var(--ink-2); font-size: 14px; }
+.state { color: var(--ink-2); }
+.due { color: var(--watch-ink); font-weight: 500; }
+.act { margin-bottom: 16px; min-height: 50px; display: flex; align-items: center; }
+.cta { height: 50px; padding: 0 24px; border: 0; border-radius: 16px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 500; cursor: pointer; }
+.cta:hover { background: #262B36; }
+.cta:active { transform: translateY(1px); }
+.text { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font-weight: 500; cursor: pointer; text-decoration: underline; }
+.note { margin: 0; font-size: 13px; color: var(--ink-2); }
+
+.weeks { display: flex; flex-direction: column; gap: 32px; }
+.weekHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.weekHead b { font-weight: 500; }
+.weekHead span { color: var(--ink-2); font-size: 14px; }
+.squares { display: flex; gap: 12px; }
+.cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sq { display: block; width: 20px; height: 20px; border-radius: 5px; }
+.taken { background: var(--ink); }
+.missed { border: 1.5px solid rgba(16, 19, 26, 0.35); background: transparent; }
+.pending { border: 1.5px solid var(--watch-mark); background: transparent; }
+.dayLabel { font-size: 12px; color: var(--ink-2); }
+
+.lead { margin: 0 0 16px; color: var(--ink-2); }
+.table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.table th, .table td { padding: 10px 16px 10px 0; text-align: left; font-weight: 400; }
+.table thead th { font-size: 14px; color: var(--ink-2); border-bottom: 1px solid rgba(16, 19, 26, 0.14); }
+.table tbody th { font-weight: 500; }
+.warn { color: var(--watch-ink); font-weight: 500; }
+.fine { color: var(--ink-2); }
+
+@media (max-width: 1279px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
