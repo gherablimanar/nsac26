@@ -1,5 +1,6 @@
 .layout { display: grid; grid-template-columns: 96px 1fr; gap: 20px; align-items: center; margin-top: 16px; }
-.full .layout { grid-template-columns: 220px 1fr; gap: 32px; align-items: start; }
+.full .layout { grid-template-columns: 1fr; gap: 24px; }
+.full .figure { max-width: 210px; justify-self: center; }
 .figure { width: 100%; height: auto; overflow: visible; }
 
 /* Base figure */

@@ -1,0 +1,21 @@
+.title { margin: 0 0 8px; font-size: 40px; line-height: 1.1; font-weight: 500; letter-spacing: -0.025em; }
+.sub { margin: 0 0 24px; font-size: 15px; color: var(--ink-2); }
+.grid { display: grid; grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); gap: 48px; align-items: start; }
+.map { min-width: 0; }
+.panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.head { margin-bottom: 8px; }
+.nameRow { display: flex; align-items: baseline; gap: 16px; }
+.name { margin: 0; font-size: 28px; line-height: 1.2; font-weight: 500; letter-spacing: -0.02em; }
+.status { font-size: 14px; color: var(--ink-2); }
+.status.watch { color: var(--watch-ink); }
+.hazards { margin: 4px 0 24px; font-size: 14px; color: var(--ink-2); }
+.whyTitle { margin: 0 0 4px; font-size: 15px; font-weight: 500; }
+.why { margin: 0 0 8px; font-size: 15px; max-width: 62ch; }
+.source { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.emptyTitle { margin: 0 0 4px; font-weight: 500; }
+.emptyText { margin: 0; color: var(--ink-2); }
+
+@media (max-width: 1279px) {
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .map { max-width: 420px; }
+}
