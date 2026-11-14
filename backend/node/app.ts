@@ -24,7 +24,7 @@ import {
   MeasurementReview,
 } from "./contracts.ts";
 import { assessCrew, readiness } from "../../src/engine/assessment.ts";
-import { answer } from "./assistant.ts";
+import { answer, assistantStatus } from "./assistant.ts";
 import { evidence, evidenceBundle, protocols } from "./evidence.ts";
 import { radiationCache, fetchRadiation } from "./radiation.ts";
 import type { MissionProfile, Reading } from "../../src/engine/types.ts";
@@ -135,6 +135,9 @@ export async function makeServer(options: Options = {}) {
     app.route({
       method,
       url,
+      ...(url === "/api/assistant"
+        ? { config: { rateLimit: { max: 12, timeWindow: "1 minute" } } }
+        : {}),
       schema: {
         description:
           "Research prototype. Demo parameters; no clinical validation.",
@@ -265,6 +268,9 @@ export async function makeServer(options: Options = {}) {
   }));
   route("GET", "/api/protocols", undefined, () => protocols);
   route("GET", "/api/audit", undefined, () => store.list("audit").slice(-100));
+  route("GET", "/api/assistant/status", undefined, () =>
+    assistantStatus(options),
+  );
   route("POST", "/api/assistant", Ask, async (s) => {
     const c = context(s);
     return answer(
@@ -276,6 +282,7 @@ export async function makeServer(options: Options = {}) {
       },
       c.assessment,
       options,
+      c.reading,
     );
   });
   route("POST", "/api/reports/draft", ReportDraft, (s) => {

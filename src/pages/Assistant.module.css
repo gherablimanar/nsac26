@@ -86,3 +86,10 @@ input[type="file"]:focus-visible + .attach { outline: 2px solid var(--accent); o
 .earlier:hover .open { color: var(--accent-hover); }
 .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: 14px; font-weight: 500; cursor: pointer; }
 .back:hover { color: var(--ink); }
+
+.answerMode { color: var(--ink-2); font-size: 12px; margin: 6px 0 12px; }
+.answerLimit { color: var(--ink-2); font-size: 12px; overflow-wrap: anywhere; }
+.claimRefs { display: flex; flex-wrap: wrap; gap: 6px; color: var(--ink-2); margin-bottom: 12px; }
+.sources { padding-left: 18px; font-size: 13px; }
+.consent { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; }
+.p { white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -104,6 +104,17 @@ export const Ask = Selection.extend({
   question: z.string().trim().min(1).max(2000),
   symptoms: Symptoms.default([]),
   allowAI: z.boolean().default(false),
+  history: z
+    .array(
+      z
+        .object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string().trim().min(1).max(2000),
+        })
+        .strict(),
+    )
+    .max(6)
+    .default([]),
 }).strict();
 export const ReportDraft = Selection.extend({
   purpose: z

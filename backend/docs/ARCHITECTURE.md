@@ -14,7 +14,10 @@ and consecutive rule-level changes are required. Unknown necessary inputs yield 
 not Nominal. `range:null` avoids presenting arbitrary score spread as a confidence interval.
 
 Triage and medication routing are deterministic and shared between browser and server.
-The hosted model is downstream and can only choose reviewed sentence IDs. Report sending
+The hosted model is downstream of triage and generates a question-specific answer
+from retrieved source summaries and selected-crew data. Citation/schema checks and a
+limited output screen precede display; these do not establish clinical correctness.
+See [assistant architecture and setup](ASSISTANT.md). Report sending
 is never a side effect of asking the assistant. Draft approval and queue simulation are
 separate operations. SQLite idempotency prevents duplicate queue records on retries.
 

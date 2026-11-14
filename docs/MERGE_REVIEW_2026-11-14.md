@@ -1,5 +1,9 @@
 # Integration review — 14 November 2026
 
+Historical review of commit `97f9d3f`. The sentence-ordering AI experiment described
+below was subsequently replaced by the conversational assistant documented in
+[backend/docs/ASSISTANT.md](../backend/docs/ASSISTANT.md).
+
 Team main integrated: `412a768a0a145a71a3a331c34ddbc2b93dc6cbd5`.
 
 The branch retains the team's current navigation, page styling, medicine layout and anatomical map. Shared assessments replace mock alert text. Daily logs save through the API with a local fallback. Additional measurements, educational tasks, reviewed evidence registry and report/what-if/NASA tools are expandable panels in those pages.

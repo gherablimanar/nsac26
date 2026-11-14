@@ -22,7 +22,7 @@ cognitive readiness day70. All severity changes come from the shared engine.
 - All seven coupled patterns, with missing-input gates, persistence, source references,
   uncertainty and explicit Unknown outcomes.
 - Local check-ins, educational cognition/vision tasks, source-labelled trends and body map.
-- Triage-first assistant with offline fallback and optional constrained hosted-AI wording selection.
+- Triage-first assistant with offline fallback and optional evidence-grounded conversational AI (server configuration required).
 - Demonstration readiness, crew overview, isolated what-if scenarios and mission context.
 - SQLite report drafts, human-approved simulated delivery, medication schedule references/adherence.
 - Source/evidence browser, real historical NASA RadLab snapshot and original-unit refresh adapter.
@@ -40,7 +40,7 @@ cognitive readiness day70. All severity changes come from the shared engine.
 | Medication potency                               | Unknown; no validated model or strength estimate is presented         |
 | Report delivery                                  | Simulated only; nothing is transmitted to Earth or other people       |
 
-Hosted AI needs network access and a key; local monitoring and reviewed fallback wording
+Hosted AI needs network access and a key; local monitoring and bundled reference summaries
 continue without it. Real operation would require validated sensors, approved medical
 protocols, domain review, appropriate privacy controls and prospective validation.
 
@@ -64,3 +64,5 @@ npm run test:browser
 Work lives on `manar-backend`, synced from the team's main at `9cde66c`. Existing team
 frontend assets and simulator are retained; the backend/scoring integrations are reviewable
 on this branch. Branch changes should be reviewed before any merge to main.
+
+Hosted assistant setup, live verification and deployment: [backend/docs/ASSISTANT.md](backend/docs/ASSISTANT.md).

@@ -6,7 +6,8 @@ export type Selection = {
 };
 export async function api<T = any>(path: string, body?: unknown): Promise<T> {
   const token = sessionStorage.getItem("halo-api-token");
-  const response = await fetch("/api" + path, {
+  const base = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+  const response = await fetch(base + path, {
     method: body === undefined ? "GET" : "POST",
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
@@ -20,6 +21,10 @@ export async function api<T = any>(path: string, body?: unknown): Promise<T> {
       response.status === 401
         ? "Backend token required: enter it in Settings."
         : `Backend request failed (${response.status})`,
+    );
+  if (!response.headers.get("content-type")?.includes("application/json"))
+    throw Error(
+      "Backend route did not return JSON. Check the API deployment and VITE_API_BASE_URL.",
     );
   return response.json();
 }

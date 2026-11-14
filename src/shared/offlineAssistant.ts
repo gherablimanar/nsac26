@@ -1,21 +1,37 @@
-import { triage, MEDICATION_TEXT } from "./triage.ts";
+import { triage, medicationAdvice } from "./triage.ts";
 import type { assessCrew } from "../engine/assessment.ts";
-export function answer(question: string, a: ReturnType<typeof assessCrew>) {
-  const urgent = triage(question).urgent;
-  const medication = MEDICATION_TEXT.test(question);
+import type { AssistantReply } from "./assistantTypes.ts";
+export function answer(
+  question: string,
+  a: ReturnType<typeof assessCrew>,
+  symptoms: string[] = [],
+): AssistantReply {
+  const screen = triage(question, symptoms);
+  const medication = medicationAdvice(question);
+  const dataQuestion =
+    /reading|measurement|risk|pattern|baseline|my data|changed|قياس|قراءات|بيانات|مخاطر/iu.test(
+      question,
+    );
   return {
     mode: "offline_rules",
-    triage: { urgent },
-    explanation: urgent
+    modelStatus: "backend_unavailable",
+    providerDataSent: false,
+    triage: screen,
+    explanation: screen.urgent
       ? "Contact the crew medical officer immediately and follow the onboard emergency protocol. Do not wait for an Earth reply."
       : medication
         ? "I cannot recommend doses or change medication. Refer to your approved schedule and medical officer."
-        : a.priority
-          ? `${a.priority.name}: ${a.priority.level}. ${a.priority.why}. ${a.priority.action}`
-          : "No persistent demo pattern established. Missing inputs and symptoms still require human review.",
-    escalation: "Use the approved crew medical escalation process.",
+        : dataQuestion
+          ? a.priority
+            ? `Offline demonstration readout: ${a.priority.name}: ${a.priority.level}. ${a.priority.why}. ${a.priority.action}`
+            : "No persistent demo pattern established. Missing inputs and symptoms still require human review."
+          : "The AI backend is unavailable, so I cannot generate an answer to this question. You can still review the bundled evidence and on-device assessment.",
+    escalation: screen.urgent
+      ? "Immediate crew medical review"
+      : "Use the approved crew medical escalation process when needed.",
     citations: [],
+    followUp: [],
     limitations:
-      "Offline deterministic fallback. No model call, no diagnosis, no transmission. Bundled rule references are not clinical approval.",
+      "Offline fallback, not a generated answer. No model call or flight-surgeon transmission occurred.",
   };
 }

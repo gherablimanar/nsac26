@@ -11,7 +11,7 @@ const aliases: Record<string, string> = {
 };
 export const evidence = raw.records.map((r: any) => ({
   ...r,
-  id: aliases[r.id],
+  id: aliases[r.id] ?? r.id,
   sourceId: r.id,
   review_status: "domain_review_pending",
   clinically_approved: false,
