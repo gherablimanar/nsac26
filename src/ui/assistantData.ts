@@ -61,6 +61,33 @@ export function respond(text: string): HaloMessage {
   if (MEDICINE.some((w) => t.includes(w))) {
     return { id: nextId(), from: "halo", blocks: [{ kind: "text", text: "I can't advise on medicines or doses. Your flight surgeon's schedule is in Medicines, and I've added your question to the note for Houston." }] };
   }
+  // MOCK scripted answers for the replies the start screen offers
+  if (t.includes("what should i do")) {
+    return { id: nextId(), from: "halo", blocks: [
+      { kind: "action", text: "What to do now: drink 500 ml over the next hour, and log your urine colour tonight." },
+      { kind: "escalation" }, { kind: "note" },
+    ] };
+  }
+  if (t.includes("headache")) {
+    return { id: nextId(), from: "halo", blocks: [
+      { kind: "check", text: "No red flags: it isn't described as sudden or severe, and no vision change is reported." },
+      { kind: "text", text: "In space, headaches often come from fluid shifting toward the head or from cabin CO2. Drink some water and note it in Daily Log." },
+      { kind: "text", text: "If it becomes sudden and severe, or your vision changes, use Urgent help." },
+    ] };
+  }
+  if (t.includes("blurry") || t.includes("blurred")) {
+    return { id: nextId(), from: "halo", blocks: [
+      { kind: "text", text: "Blurred vision can be an early sign of SANS, when fluid shifting toward the head affects the eye. About 66% of long-duration astronauts show early signs." },
+      { kind: "action", text: "What to do now: do the vision self-test in Daily Log today and tell your crew medical officer." },
+      { kind: "text", text: "If you suddenly lose vision, use Urgent help." },
+    ] };
+  }
+  if (t.includes("slept badly") || t.includes("sleep")) {
+    return { id: nextId(), from: "halo", blocks: [
+      { kind: "text", text: "Most crews sleep about 6 hours in space. One short night slows reaction time, so take the reaction test before any spacewalk or docking." },
+      { kind: "action", text: "Tonight: dim the lights an hour before sleep and keep your schedule fixed." },
+    ] };
+  }
   return { id: nextId(), from: "halo", blocks: [
     { kind: "text", text: "Thanks. For this prototype my answers are scripted, so try one of these:" },
     { kind: "quick", options: ["I have a headache", "My vision is blurry"] },
@@ -68,3 +95,4 @@ export function respond(text: string): HaloMessage {
 }
 
 export const userMsg = (text: string): UserMessage => ({ id: nextId(), from: "user", text });
+export const haloMsg = (blocks: Block[]): HaloMessage => ({ id: nextId(), from: "halo", blocks });

@@ -5,7 +5,20 @@
 .why { margin: 0; max-width: 62ch; font-size: 16px; color: var(--ink-on-field); }
 .next { margin: 28px 0 0; color: var(--ink-on-field); }
 .next b { color: var(--ink); font-weight: 500; }
-.chart { margin: 28px 0 22px; }
+.chart { margin: 28px 0 20px; }
+.plan { margin: 0 0 18px; }
+.planHead { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.planHead h2 { margin: 0; font-size: 15px; font-weight: 500; }
+.planHead > span { font-size: 14px; color: var(--ink-on-field); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.step { position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.step input { position: absolute; opacity: 0; width: 22px; height: 22px; margin: 0; cursor: pointer; }
+.step small { display: block; font-size: 13px; color: var(--ink-on-field); }
+.box { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--ink-on-field); flex: none; display: grid; place-items: center; background: rgba(255, 255, 255, 0.5); }
+.step input:focus-visible + .box { outline: 2px solid var(--ink); outline-offset: 2px; }
+.stepDone .box { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.stepDone > span:last-child { text-decoration: line-through; color: var(--ink-on-field); }
+.allDone { display: inline-flex; align-items: center; gap: 8px; min-height: 50px; font-weight: 500; }
 .act { display: flex; align-items: center; gap: 24px; }
 .cta { height: 50px; padding: 0 24px; border: 0; border-radius: 16px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 500; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
 .cta:hover { background: #262B36; }

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Check, Microphone, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowLeft, CaretRight, ChartLineUp, Check, ClockCounterClockwise, Microphone, RocketLaunch, ShieldCheck, Stethoscope } from "@phosphor-icons/react";
 import card from "../components/Card.module.css";
 import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
 import { driftOn } from "../ui/systems.ts";
 import { readingOn } from "../data/crew.ts";
 import { buildOverview } from "../ui/overviewData.ts";
-import { EMERGENCY_TEXT, EMPTY_QUICK, NOTE_TEXT, SEED_C2, respond, userMsg, type Block, type Message } from "../ui/assistantData.ts";
+import { GATE_OF, worstGate } from "../ui/missionData.ts";
+import { SYSTEMS, systemStatus } from "../ui/systems.ts";
+import { EMPTY_QUICK, NOTE_TEXT, SEED_C2, haloMsg, respond, userMsg, type Block, type Message } from "../ui/assistantData.ts";
 import s from "./Assistant.module.css";
 
 type Props = { crewId: string; day: number; delay: string | null; urgent: boolean };
@@ -46,13 +48,15 @@ function NoteRow({ delay }: { delay: string | null }) {
 export function Assistant({ crewId, day, delay, urgent }: Props) {
   const drift = useMemo(() => driftOn(crewId, day), [crewId, day]);
   const risk = useMemo(() => buildOverview(crewId, day).risk, [crewId, day]);
-  const [messages, setMessages] = useState<Message[]>(crewId === "C2" ? SEED_C2 : []);
+  // Start screen first: when you're fine it should be obvious what this page is for
+  const [mode, setMode] = useState<"start" | "chat">(urgent ? "chat" : "start");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const area = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const timers = useRef<number[]>([]);
 
-  useEffect(() => { setMessages(crewId === "C2" ? SEED_C2 : []); }, [crewId]);
+  useEffect(() => { setMessages([]); setMode(urgent ? "chat" : "start"); }, [crewId, urgent]);
   useEffect(() => { if (urgent) input.current?.focus(); }, [urgent]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   useEffect(() => { const el = area.current; if (el) el.scrollTop = el.scrollHeight; }, [messages]);
@@ -60,6 +64,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   const send = (raw: string) => {
     const t = raw.trim();
     if (!t) return;
+    setMode("chat");
     setMessages((m) => [...m, userMsg(t)]);
     setText("");
     timers.current.push(window.setTimeout(() => setMessages((m) => [...m, respond(t)]), 400));
@@ -107,6 +112,30 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
 
   const rowVal = (out: boolean) => (out ? `mono ${s.out}` : "mono");
 
+  // One-line status so you know where you stand before choosing anything
+  const flagged = SYSTEMS.filter((d) => systemStatus(d, drift) === "watch").map((d) => d.label);
+  const status = risk
+    ? <><b className={s.watch}>Watch</b>&nbsp;&nbsp;{risk.title} since Day {risk.sinceDay}.</>
+    : flagged.length
+      ? <>No linked risks. {flagged.join(" and ")} {flagged.length === 1 ? "is" : "are"} outside your normal range on {flagged.length === 1 ? "its" : "their"} own.</>
+      : <>Your readings are inside your normal range today.</>;
+
+  // MOCK openers for each choice (scripted; no model call in this prototype)
+  const readiness = worstGate(["sleep_hours", "reaction_time_ms", "radiation_mSv_today"].map((k) => GATE_OF[drift[k]?.status ?? "inside band"]));
+  const start = (kind: "symptom" | "readings" | "task") => {
+    setMode("chat");
+    if (kind === "symptom") {
+      setMessages([haloMsg([{ kind: "text", text: "Tell me what you feel and where. I check for emergency signs first, then compare it with your readings." }, { kind: "quick", options: EMPTY_QUICK }])]);
+      setTimeout(() => input.current?.focus(), 0);
+    } else if (kind === "readings") {
+      setMessages([haloMsg(risk
+        ? [{ kind: "text", text: "Here's what stands out today:" }, { kind: "evidence" }, { kind: "text", text: "Together these raise your kidney stone risk." }, { kind: "quick", options: ["What should I do?"] }]
+        : [{ kind: "text", text: flagged.length ? `${flagged.join(" and ")} ${flagged.length === 1 ? "is" : "are"} outside your normal range, but nothing is linked to it. Everything else is inside your normal range.` : "Every reading is inside your own normal range today. Nothing needs you." }])]);
+    } else {
+      setMessages([haloMsg([{ kind: "text", text: `Readiness today: ${readiness}. HALO checks your sleep, reaction time and radiation against your own normal.` }, { kind: "text", text: readiness === "Go" ? "You're clear for a spacewalk or docking today. The full check is on Mission." : "Look at the full check on Mission before any spacewalk or docking." }])]);
+    }
+  };
+
   return (
     <div>
       <h1 className={s.title}>Assistant</h1>
@@ -114,16 +143,32 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
       <div className={s.grid}>
         <section className={`${card.card} ${s.convo}`} aria-label="Conversation with HALO">
           <div className={s.messages} ref={area}>
-            {urgent && <Emergency title="Urgent help" text="Tell me what's happening, or start the emergency protocol now." delay={delay} />}
-            {messages.length === 0 && (
-              <div className={s.halo}>
-                <div className={s.label}>HALO</div>
-                <p className={s.p}>Ask about how you feel. HALO checks emergency signs first, then your readings.</p>
-                <div className={s.quick}>
-                  {EMPTY_QUICK.map((o) => <button key={o} type="button" className={s.quickBtn} onClick={() => send(o)}>{o}</button>)}
+            {mode === "start" && (
+              <div className={s.start}>
+                <p className={s.status}>{status}</p>
+                <h2 className={s.q}>How are you feeling?</h2>
+                <div className={s.choices}>
+                  {([
+                    ["symptom", Stethoscope, "Report a symptom", "Pain, headache, vision, anything that feels off."],
+                    ["readings", ChartLineUp, "Ask about my readings", "What changed, and what's normal for you."],
+                    ["task", RocketLaunch, "Prepare for a task", "Spacewalk or docking: are you ready today?"],
+                  ] as const).map(([k, Icon, t, d]) => (
+                    <button key={k} type="button" className={s.choice} onClick={() => start(k)}>
+                      <Icon size={22} /><span><b>{t}</b><small>{d}</small></span><CaretRight size={18} color="var(--ink-2)" />
+                    </button>
+                  ))}
                 </div>
+                {crewId === "C2" && (
+                  <button type="button" className={s.earlier} onClick={() => { setMessages(SEED_C2); setMode("chat"); }}>
+                    <ClockCounterClockwise size={18} />Earlier today at <span className="mono">09:14</span>: lower back ache<span className={s.open}>Open</span>
+                  </button>
+                )}
               </div>
             )}
+            {mode === "chat" && (
+              <button type="button" className={s.back} onClick={() => { setMessages([]); setMode("start"); }}><ArrowLeft size={16} />New conversation</button>
+            )}
+            {urgent && <Emergency title="Urgent help" text="Tell me what's happening, or start the emergency protocol now." delay={delay} />}
             {messages.map((m) => m.from === "user" ? (
               <div key={m.id} className={s.user}>{m.text}</div>
             ) : (
@@ -135,7 +180,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
           </div>
           <div className={s.composer}>
             <label htmlFor="assistant-input" className={s.vh}>Describe how you feel</label>
-            <textarea id="assistant-input" ref={input} className={s.input} rows={1} placeholder="Describe how you feel"
+            <textarea id="assistant-input" ref={input} className={s.input} rows={1} placeholder={mode === "start" ? "Or describe it in your own words" : "Describe how you feel"}
               value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} />
             <button type="button" className={s.mic} aria-label="Speak"><Microphone size={20} /></button>
             <button type="button" className={s.cta} onClick={() => send(text)}>Send</button>

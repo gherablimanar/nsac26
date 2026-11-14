@@ -15,7 +15,10 @@ export type PriorityRisk = {
   eventDay: number;
   eventLabel: string;
   otherRisks: string[];
+  plan: PlanStep[]; // the to-do that answers this risk, in order
 };
+
+export type PlanStep = { id: string; label: string; when: string; cta: string };
 
 export type ChartPoint = { day: number; value: number; band: [number, number]; out: number | null };
 

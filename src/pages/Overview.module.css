@@ -1,4 +1,4 @@
-.field { position: absolute; top: 12px; left: 12px; right: 12px; height: 680px; border-radius: var(--radius-panel); overflow: hidden; z-index: 0; background: #E4E1EA; }
+.field { position: absolute; top: 12px; left: 12px; right: 12px; height: 780px; border-radius: var(--radius-panel); overflow: hidden; z-index: 0; background: #E4E1EA; }
 .field::before { content: ""; position: absolute; inset: -20%; animation: drift 26s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translate(-4%, 3%) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { .field::before { animation: none; } }
