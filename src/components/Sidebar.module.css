@@ -24,6 +24,7 @@
   .side { width: 76px; padding: 18px 10px; }
   .brand { padding: 4px 0 24px; justify-content: center; }
   .brand span, .proto { display: none; }
-  .water :global(.nimbus-item) { justify-content: center; padding: 0; }
+  /* doubled class + attribute so this beats the component's own vertical item style */
+  .water.water[data-orient="vertical"] :global(.nimbus-item) { justify-content: center; padding: 0; }
   .water :global(.nimbus-label) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }

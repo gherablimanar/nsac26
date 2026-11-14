@@ -292,9 +292,12 @@ export function LiquidNavbar({
       g.uniform2f(u.uRes, s.w + PAD * 2, s.h + PAD * 2)
       g.uniform1f(u.uDpr, dpr)
       g.uniform1f(u.uTime, s.time)
-      g.uniform4f(u.uPill, PAD, PAD, s.w, s.h)
+      // bare: the water area reaches into the canvas bleed, so a full-width drop
+      // rounds off instead of being shaved flat by the item edges
+      if (o.bare) g.uniform4f(u.uPill, 2, 2, s.w + PAD * 2 - 4, s.h + PAD * 2 - 4)
+      else g.uniform4f(u.uPill, PAD, PAD, s.w, s.h)
       g.uniform1f(u.uBare, o.bare ? 1 : 0)
-      g.uniform1f(u.uPillR, o.vertical ? 24 : 9999)
+      g.uniform1f(u.uPillR, o.bare ? 28 : o.vertical ? 24 : 9999)
       const blobs = new Float32Array(24)
       const sy = new Float32Array(6).fill(1)
       const head = s.lead === 0 ? s.a : s.b, tail = s.lead === 0 ? s.b : s.a
