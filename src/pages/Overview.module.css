@@ -1,4 +1,4 @@
-.field { position: absolute; top: 12px; left: 12px; right: 12px; height: 780px; border-radius: var(--radius-panel); overflow: hidden; z-index: 0; background: #E4E1EA; }
+.field { position: absolute; top: 12px; left: 12px; right: 12px; height: calc(var(--field-bottom, 792px) - 12px); transition: height 0.35s var(--ease-out); border-radius: var(--radius-panel); overflow: hidden; z-index: 0; background: #E4E1EA; }
 .field::before { content: ""; position: absolute; inset: -20%; animation: drift 26s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translate(-4%, 3%) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { .field::before { animation: none; } }
@@ -35,7 +35,8 @@
   background: radial-gradient(30% 42% at 86% 44%, rgba(129, 216, 208, 0.35), rgba(129, 216, 208, 0) 70%);
 }
 
-.others { margin: 34px 0 20px; font-size: 14px; color: var(--ink-2); }
-.below { display: grid; grid-template-columns: 1fr 1.1fr 1.25fr; gap: 16px; }
+.below { margin-top: 48px; display: grid; grid-template-columns: 1fr 1.1fr 1.25fr; gap: 16px; }
 @media (max-width: 1279px) { .below { grid-template-columns: 1fr 1fr; } }
-.others b { color: var(--watch-ink); font-weight: 500; }
+
+/* The field fades in, and crossfades when the risk state changes (it is keyed by state) */
+.field { animation: fade 0.7s ease-out both; }

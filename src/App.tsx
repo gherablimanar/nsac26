@@ -33,15 +33,16 @@ export default function App() {
 
   const openHealth = (id: BodySystemId) => { setSystem(id); setPage("health"); };
   const navigate = (p: Page) => { setUrgent(false); setPage(p); };
+  const fieldState = overviewState(crewId, DEMO_DAY);
 
   return (
     <>
-      {page === "overview" && <Field state={overviewState(crewId, DEMO_DAY)} />}
+      {page === "overview" && <Field key={fieldState} state={fieldState} />}
       <Sidebar page={page} onNavigate={navigate} />
       <TopBar profile={MISSION_PROFILE} day={DEMO_DAY} crew={SIM.crew} selected={crewById(crewId)}
         onSelect={setCrewId} onUrgentHelp={() => { setUrgent(true); setPage("assistant"); }} />
       <main className={s.main}>
-        {page === "overview" && <Overview crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} />}
+        {page === "overview" && <Overview key={crewId} crewId={crewId} day={DEMO_DAY} delay={DELAY} onOpenHealth={openHealth} />}
         {page === "settings" && <Settings look={look} onLook={setLook} />}
         {page === "health" && <Health crewId={crewId} day={DEMO_DAY} selected={system} onSelect={setSystem} />}
         {page === "log" && <DailyLog crewId={crewId} day={DEMO_DAY} />}

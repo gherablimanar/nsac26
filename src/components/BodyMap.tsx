@@ -3,14 +3,25 @@ import type { BodySystem, BodySystemId, SystemStatus } from "../ui/viewTypes.ts"
 import { SYSTEM_BY_ID, type Layer } from "../ui/systems.ts";
 import skeletonUrl from "../assets/anatomy/skeleton.svg";
 import musclesUrl from "../assets/anatomy/muscles.png";
+import musclesMaskUrl from "../assets/anatomy/muscles-loss-mask.png";
+import bonesMaskUrl from "../assets/anatomy/bones-load-mask.png";
+import lungsUrl from "../assets/anatomy/organs/lungs.png";
+import heartUrl from "../assets/anatomy/organs/heart.png";
+import liverUrl from "../assets/anatomy/organs/liver.png";
+import stomachUrl from "../assets/anatomy/organs/stomach.png";
+import intestineUrl from "../assets/anatomy/organs/intestine.png";
+import urinaryUrl from "../assets/anatomy/organs/urinary.png";
 import card from "./Card.module.css";
 import { Segmented } from "./Segmented";
+import { More } from "./More";
 import s from "./BodyMap.module.css";
 
 // Detailed front-view body map in three layers, in natural textbook colours:
 // - Skeleton: public-domain illustration (M. Ruiz Villarreal and M. Häggström, Wikimedia Commons)
 // - Muscles: OpenStax Anatomy and Physiology, CC BY 4.0, resized
-// - Organs: drawn for HALO on a faded copy of the skeleton, so they sit anatomically right
+// - Organs: CC0 organ illustrations by M. Häggström (Wikimedia Commons), placed on a faded copy of the skeleton
+// Amber highlights on the skeleton and muscles are masks cut from the illustrations, so they follow
+// the exact bone and muscle outlines.
 // A system that needs attention gets an amber outline; the list beside it is the text version.
 // All layers share one frame (viewBox) so the body stays in place when switching.
 
@@ -31,7 +42,7 @@ const LAYER_HINT: Partial<Record<Layer, string>> = {
   muscles: "Thighs and calves lose the most muscle without gravity.",
 };
 const CREDIT: Record<Layer, ReactNode> = {
-  organs: "Organs drawn for HALO on a public-domain skeleton by M. Ruiz Villarreal and M. Häggström.",
+  organs: "Organs: M. Häggström, CC0. Skeleton: M. Ruiz Villarreal and M. Häggström, public domain. Wikimedia Commons.",
   skeleton: "Skeleton: M. Ruiz Villarreal and M. Häggström, public domain, Wikimedia Commons.",
   muscles: <>Muscles: OpenStax Anatomy and Physiology, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>, resized.</>,
 };
@@ -47,7 +58,7 @@ type Props = {
 export function BodyMap({ systems, onSelect, size = "compact", selected, onOpen }: Props) {
   const [layer, setLayer] = useState<Layer>("organs");
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const amber = `amber${uid}`, ink = `ink${uid}`;
+  const amber = `amber${uid}`, ink = `ink${uid}`, ring = `ring${uid}`;
   const by = Object.fromEntries(systems.map((x) => [x.id, x])) as Record<BodySystemId, BodySystem>;
   const inLayer = systems.filter((x) => SYSTEM_BY_ID[x.id].layer === layer);
 
@@ -67,16 +78,20 @@ export function BodyMap({ systems, onSelect, size = "compact", selected, onOpen 
     );
   };
 
+  // Exact-shape masks get the amber ring only when their system is flagged
+  const maskFilter = (id: BodySystemId) => (by[id].status === "watch" || by[id].status === "act" ? { filter: `url(#${ring})` } : undefined);
+
   const figure = (
     <svg viewBox={VB} className={s.figure} aria-label="Body map">
       <defs>
         {/* Outline filters: a thick ring around a flagged (amber) or selected (ink) part */}
-        {([[amber, "#E08A1E"], [ink, "#10131A"]] as const).map(([id, col]) => (
+        {/* thick glow for drawn organs, thin ring for the exact-shape bone and muscle masks */}
+        {([[amber, "#E08A1E", 4, 3], [ink, "#10131A", 3, 0.5], [ring, "#C27C00", 1.2, 0.4]] as const).map(([id, col, grow, blur]) => (
           <filter key={id} id={id} x="-20%" y="-20%" width="140%" height="140%">
-            <feMorphology in="SourceAlpha" operator="dilate" radius={id === amber ? 4 : 3} result="grown" />
+            <feMorphology in="SourceAlpha" operator="dilate" radius={grow} result="grown" />
             <feFlood floodColor={col} />
             <feComposite in2="grown" operator="in" result="ring" />
-            <feGaussianBlur in="ring" stdDeviation={id === amber ? 3 : 0.5} result="soft" />
+            <feGaussianBlur in="ring" stdDeviation={blur} result="soft" />
             <feMerge><feMergeNode in="soft" /><feMergeNode in="ring" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         ))}
@@ -85,74 +100,60 @@ export function BodyMap({ systems, onSelect, size = "compact", selected, onOpen 
       {layer === "organs" && (
         <>
           <image href={skeletonUrl} {...SKELETON} opacity={0.28} className={s.blend} />
-          {region("lungs", <>
-            <path d="M192 166 C170 160 150 178 145 214 C140 250 145 279 159 288 C174 293 190 283 194 268 Z" fill="#E59AA4" stroke="#C26F7B" />
-            <path d="M212 170 C231 162 252 177 258 211 C263 247 260 279 248 288 C236 294 223 286 219 277 C230 263 229 246 214 239 Z" fill="#E59AA4" stroke="#C26F7B" />
-            <path d="M150 232 C164 226 180 236 192 230 M222 226 C234 232 246 226 256 232" fill="none" stroke="#C26F7B" strokeWidth="1.4" />
-            <path d="M193 140 L193 170 M211 140 L211 172" stroke="#D9B8B8" strokeWidth="6" strokeLinecap="round" />
-          </>, s.organ)}
-          {region("heart", <>
-            <path d="M198 212 C186 217 185 238 194 251 C203 263 219 268 230 261 C242 253 245 231 236 218 C228 206 211 204 198 212 Z" fill="#B3322A" stroke="#7F1F19" />
-            <path d="M205 214 C214 210 224 212 230 220 C224 222 214 220 205 214 Z" fill="#D65A4E" />
-            <path d="M206 210 C206 196 214 188 226 190" fill="none" stroke="#B3322A" strokeWidth="7" strokeLinecap="round" />
-          </>, s.organ)}
+          {region("lungs", <image href={lungsUrl} x="137" y="150" width="130" height="136" />, s.organ)}
+          {region("heart", <image href={heartUrl} x="193" y="190" width="40" height="75" />, s.organ)}
           {region("gut", <>
-            <path d="M141 262 C160 251 204 253 221 262 C219 279 199 293 175 299 C157 303 143 291 141 262 Z" fill="#8C3A2E" stroke="#5F241B" />
-            <path d="M214 266 C232 257 255 265 257 284 C259 303 241 313 226 307 C217 303 222 291 211 286 Z" fill="#E3A47B" stroke="#B57650" />
-            <path d="M158 322 C158 314 168 312 180 314 L226 314 C240 312 249 316 249 326 L249 372 C249 382 240 386 228 384 L178 384 C166 386 158 382 158 372 Z" fill="#E8B59C" stroke="#BF8669" />
-            <path d="M172 334 C182 326 190 342 200 334 C210 326 218 342 230 334 M172 352 C182 344 190 360 200 352 C210 344 218 360 230 352 M176 370 C186 362 194 376 204 368 C214 360 222 376 230 370" fill="none" stroke="#BF8669" strokeWidth="1.6" />
+            <image href={liverUrl} x="140" y="256" width="96" height="65" />
+            <image href={stomachUrl} x="204" y="262" width="52" height="48" />
+            <image href={intestineUrl} x="160" y="318" width="86" height="80" />
           </>, s.organ)}
-          {region("kidneys", <>
-            <path d="M171 296 C160 296 154 306 155 318 C156 331 163 340 173 338 C179 337 181 331 178 326 C175 321 175 315 178 310 C181 304 179 296 171 296 Z" fill="#A24A2C" stroke="#6E2F1A" />
-            <path d="M233 298 C244 298 250 308 249 320 C248 333 241 342 231 340 C225 339 223 333 226 328 C229 323 229 317 226 312 C223 306 225 298 233 298 Z" fill="#A24A2C" stroke="#6E2F1A" />
-            <ellipse cx="202" cy="393" rx="13" ry="10" fill="#E5BE66" stroke="#B48C3A" />
-          </>, s.organ)}
+          {region("kidneys", <image href={urinaryUrl} x="160" y="288" width="85" height="128" />, s.organ)}
           {region("mind", <>
-            <ellipse cx="202" cy="50" rx="31" ry="26" fill="#E6B6BD" stroke="#B9838C" />
-            <path d="M202 25 L202 75 M180 44 C186 36 194 40 198 34 M206 34 C212 40 220 36 226 44 M178 57 C186 52 192 60 199 54 M205 54 C212 60 218 52 226 58" fill="none" stroke="#B9838C" strokeWidth="1.4" />
+            <path d="M201 26 C186 25 173 34 172 48 C171 62 180 72 194 73 C198 73 200 71 201 69 Z M203 26 C218 25 231 34 232 48 C233 62 224 72 210 73 C206 73 204 71 203 69 Z" fill="#E7C3C6" stroke="#B98D93" strokeWidth="1.2" />
+            <path d="M178 42 C184 38 188 44 194 40 M176 54 C183 50 189 57 196 52 M181 64 C187 60 192 66 197 62 M226 42 C220 38 216 44 210 40 M228 54 C221 50 215 57 208 52 M223 64 C217 60 212 66 207 62" fill="none" stroke="#B98D93" strokeWidth="1" />
           </>, s.organ)}
-          {region("eyes", <>
-            <circle cx="183" cy="72" r="7" fill="#FBFBF8" stroke="#8C95A6" />
-            <circle cx="221" cy="72" r="7" fill="#FBFBF8" stroke="#8C95A6" />
-            <circle cx="183" cy="72" r="3.2" fill="#5C7F9A" /><circle cx="221" cy="72" r="3.2" fill="#5C7F9A" />
-          </>, s.organ)}
+          {region("eyes", <><ellipse className={s.orbit} cx="183" cy="72" rx="8" ry="7" /><ellipse className={s.orbit} cx="221" cy="72" rx="8" ry="7" /></>)}
         </>
       )}
 
       {layer === "skeleton" && region("bones", <>
         <image href={skeletonUrl} {...SKELETON} className={s.blend} />
         <rect x="120" y="15" width="165" height="790" fill="transparent" />
-        {/* weight-bearing bones, where space bone loss is greatest */}
-        <rect className={s.hot} x="191" y="125" width="22" height="270" rx="10" />
-        <ellipse className={s.hot} cx="202" cy="368" rx="72" ry="44" />
-        <line className={s.hotLine} x1="152" y1="390" x2="172" y2="575" />
-        <line className={s.hotLine} x1="252" y1="390" x2="230" y2="575" />
+        {/* spine, pelvis and thigh bones, cut from the illustration: where space bone loss is greatest */}
+        <image href={bonesMaskUrl} {...SKELETON} className={s.mask} style={maskFilter("bones")} />
       </>)}
 
       {layer === "muscles" && region("muscles", <>
         <image href={musclesUrl} {...MUSCLES} className={s.blend} />
         <rect x="100" y="15" width="205" height="790" fill="transparent" />
-        {/* thighs and calves, where space muscle loss is greatest */}
-        <ellipse className={s.hot} cx="161" cy="469" rx="37" ry="90" />
-        <ellipse className={s.hot} cx="243" cy="469" rx="37" ry="90" />
-        <ellipse className={s.hot} cx="161" cy="641" rx="27" ry="65" />
-        <ellipse className={s.hot} cx="239" cy="641" rx="27" ry="65" />
+        {/* thigh and calf muscles, cut from the illustration: where space muscle loss is greatest */}
+        <image href={musclesMaskUrl} {...MUSCLES} className={s.mask} style={maskFilter("muscles")} />
       </>)}
     </svg>
   );
 
-  const list = (
+  const rows = (items: BodySystem[]) => (
+    <ul className={s.list}>
+      {items.map((x) => (
+        <li key={x.id}>
+          <button className={`${s.row} ${statusClass[x.status]} ${selected === x.id ? s.rowSelected : ""}`} onClick={() => onSelect(x.id)}>
+            {x.label}<span>{statusText[x.status]}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+  // Overview: only what is outside normal, from every layer; the rest folds away. Health: the current layer, in full.
+  const flagged = systems.filter((x) => x.status === "watch" || x.status === "act");
+  const list = size === "full" ? (
     <div className={s.side}>
-      <ul className={s.list}>
-        {inLayer.map((x) => (
-          <li key={x.id}>
-            <button className={`${s.row} ${statusClass[x.status]} ${selected === x.id ? s.rowSelected : ""}`} onClick={() => onSelect(x.id)}>
-              {x.label}<span>{statusText[x.status]}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {rows(inLayer)}
       {LAYER_HINT[layer] && <p className={s.hint}>{LAYER_HINT[layer]}</p>}
+    </div>
+  ) : (
+    <div className={s.side}>
+      {flagged.length ? rows(flagged) : <p className={s.hint}>Everything is inside your normal.</p>}
+      <More label={`All ${systems.length} systems`}>{rows(systems.filter((x) => !flagged.includes(x)))}</More>
     </div>
   );
 
@@ -165,7 +166,7 @@ export function BodyMap({ systems, onSelect, size = "compact", selected, onOpen 
       <Segmented label="Body layer" value={layer} onChange={setLayer}
         options={LAYERS.map((l) => ({ ...l, attention: systems.some((x) => SYSTEM_BY_ID[x.id].layer === l.id && (x.status === "watch" || x.status === "act")) }))} />
       <div className={s.layout}>{figure}{list}</div>
-      <p className={s.credit}>{CREDIT[layer]}</p>
+      {size === "full" && <More label="Image credits"><p className={s.credit}>{CREDIT[layer]}</p></More>}
     </section>
   );
 }

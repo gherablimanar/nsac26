@@ -1,5 +1,6 @@
 import { useState } from "react";
 import card from "../components/Card.module.css";
+import { More } from "../components/More";
 import { readingOn } from "../data/crew";
 import { PACKED_DAYS_BEFORE_LAUNCH, POTENCY, SET_ON_DAY, TODAY, WEEK, WEEK_DAYS, strengthOf, below90Day } from "../ui/medicinesData";
 import s from "./Medicines.module.css";
@@ -14,7 +15,6 @@ export function Medicines({ crewId, day }: Props) {
   return (
     <>
       <h1 className={s.title}>Medicines</h1>
-      <p className={s.sub}>Your schedule is set by your flight surgeon. HALO never changes doses.</p>
 
       <div className={s.grid}>
         <section className={`${card.card}`} aria-labelledby="today-h">
@@ -36,7 +36,7 @@ export function Medicines({ crewId, day }: Props) {
               ? <button type="button" className={s.text} onClick={() => setMelTaken(false)}>Undo</button>
               : <button type="button" className={s.cta} onClick={() => setMelTaken(true)}>Mark melatonin as taken</button>}
           </div>
-          <p className={s.note}>Set by your flight surgeon on Day {SET_ON_DAY}.</p>
+          <p className={s.note}>Set by your flight surgeon on Day {SET_ON_DAY}. HALO never changes doses.</p>
         </section>
 
         <section className={card.card} aria-labelledby="week-h">
@@ -64,10 +64,9 @@ export function Medicines({ crewId, day }: Props) {
 
         <section className={`${card.card} ${s.pharm}`} aria-labelledby="ph-h">
           <div className={card.head}><h2 id="ph-h">Onboard pharmacy</h2></div>
-          <p className={s.lead}>Estimated strength of each medicine after time and radiation in space.</p>
           <table className={s.table}>
             <thead>
-              <tr><th>Medicine</th><th>Days stowed</th><th>Radiation absorbed</th><th>Estimated strength</th><th>Below 90% around</th><th>Note</th></tr>
+              <tr><th>Medicine</th><th>Estimated strength</th><th>Below 90% around</th><th>Note</th></tr>
             </thead>
             <tbody>
               {POTENCY.map((p) => {
@@ -78,8 +77,6 @@ export function Medicines({ crewId, day }: Props) {
                 return (
                   <tr key={p.name}>
                     <th scope="row">{p.name}</th>
-                    <td className="mono">{stowed}</td>
-                    <td><span className="mono">{Math.round(total)}</span> mSv</td>
                     <td><span className="mono">{st}</span>%</td>
                     <td>{drop === null ? "Lasts the round trip" : <span className="mono">Day {drop}</span>}</td>
                     <td className={note === "Fine" ? s.fine : s.warn}>{note}</td>
@@ -88,7 +85,10 @@ export function Medicines({ crewId, day }: Props) {
               })}
             </tbody>
           </table>
-          <p className={s.note}>Demo model shaped by Du et al. 2011: after 880 days in orbit only 31% of medicines passed potency tests, against 54% on Earth. Not a lab measurement. Future dose assumes 1.8 mSv per day in Mars cruise.</p>
+          <More label="How strength is estimated">
+            <p>Every medicine has been stowed <span className="mono">{stowed}</span> days and absorbed <span className="mono">{Math.round(total)}</span> mSv. Strength drops with time and radiation.</p>
+            <p>Demo model shaped by Du et al. 2011: after 880 days in orbit only 31% of medicines passed potency tests, against 54% on Earth. Not a lab measurement. Future dose assumes 1.8 mSv per day in Mars cruise.</p>
+          </More>
         </section>
       </div>
     </>

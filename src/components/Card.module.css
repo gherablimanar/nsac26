@@ -2,5 +2,5 @@
 .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
 .head h2 { margin: 0; font-size: 15px; font-weight: 500; }
 .head span, .head a, .head button { font-size: 14px; color: var(--ink-2); }
-.head a, .head button { text-decoration: none; font-weight: 500; background: none; border: 0; padding: 0; cursor: pointer; }
-.head a:hover, .head button:hover { text-decoration: underline; }
+.head a, .head button { min-height: 44px; margin: -12px 0; color: var(--accent); text-decoration: none; font-weight: 500; background: none; border: 0; padding: 0; cursor: pointer; }
+.head a:hover, .head button:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }

@@ -1,0 +1,17 @@
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.big { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 36px; line-height: 1.1; letter-spacing: -0.01em; }
+.big small { font-family: var(--sans); font-size: 15px; color: var(--ink-2); letter-spacing: 0; margin-left: 2px; }
+.normal { font-size: 13px; color: var(--ink-2); }
+
+/* The week as bars over the same "your normal" band the charts use */
+.bars { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; align-items: end; height: 76px; margin: 18px 0 6px; }
+.band { position: absolute; left: -4px; right: -4px; border-radius: 6px; background: rgba(129, 216, 208, 0.28); }
+.bar { position: relative; border-radius: 5px 5px 3px 3px; background: #B9BFCA; transform-origin: bottom; animation: grow 0.5s var(--ease-out) both; }
+.bar.last { background: var(--ink-2); }
+.bar.low { background: var(--watch-mark); }
+@keyframes grow { from { transform: scaleY(0); } }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); text-align: center; }
+
+.line { margin: 14px 0 0; font-size: 14px; }
+.debt { margin: 2px 0 0; font-size: 13px; color: var(--ink-2); }
+.outInk { color: var(--watch-ink); }

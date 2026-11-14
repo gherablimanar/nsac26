@@ -21,12 +21,6 @@ export function Overview({ crewId, day, delay, onOpenHealth }: Props) {
     <>
       <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next}
         flagged={m.systems.filter((x) => x.status === "watch" || x.status === "act").map((x) => x.label)} />
-      {m.risk && (() => {
-        const also = m.systems.filter((x) => (x.status === "watch" || x.status === "act") && !m.risk!.systemIds.includes(x.id)).map((x) => x.label);
-        return <p className={s.others}>{also.length
-          ? <>Also outside your normal: <b>{also.join(" and ")}</b>. Open Health to see why.</>
-          : <>Other linked risks: {m.risk.otherRisks.join(", ")}. All inside your normal range.</>}</p>;
-      })()}
       <div className={s.below}>
         <TodayTasks key={crewId} initial={m.tasks} />
         <BodyMap systems={m.systems} onSelect={onOpenHealth}

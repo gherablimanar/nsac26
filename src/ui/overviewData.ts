@@ -13,6 +13,7 @@ const RISKS: Record<string, PriorityRisk> = {
     title: "Kidney stone risk is rising",
     level: "watch",
     sinceDay: 55,
+    short: "Less water, more salt and faster bone loss: together they form kidney stones in space.",
     why: "Your fluid intake fell by half on Day 55. Since then your urine has darkened, you are eating more salt, and your bone breakdown marker keeps climbing. Together, that is how kidney stones form in microgravity.",
     action: "Drink 500 ml more today",
     signals: ["fluid_intake_ml", "urine_color_1to8", "sodium_mg", "bone_resorption_index"],

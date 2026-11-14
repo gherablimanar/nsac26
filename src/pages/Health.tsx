@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { BookOpen } from "@phosphor-icons/react";
 import { BodyMap } from "../components/BodyMap";
 import { SignalTrend } from "../components/SignalTrend";
+import { SleepCard } from "../components/SleepCard";
 import { SYSTEMS, SYSTEM_BY_ID, driftOn, systemStatus } from "../ui/systems.ts";
 import type { BodySystem, BodySystemId } from "../ui/viewTypes.ts";
 import card from "../components/Card.module.css";
@@ -28,10 +29,10 @@ export function Health({ crewId, day, selected, onSelect }: Props) {
   return (
     <>
       <h1 className={s.title}>Health</h1>
-      <p className={s.sub}>Every reading compared with your own normal, not an Earth average.</p>
       <div className={s.grid}>
         <div className={s.map}>
           <BodyMap size="full" systems={systems} selected={sel} onSelect={onSelect} />
+          <SleepCard crewId={crewId} day={day} onOpen={() => onSelect("mind")} />
         </div>
         <div className={s.panel}>
           <header className={s.head}>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ArrowLeft, CaretRight, ChartLineUp, Check, ClockCounterClockwise, Microphone, RocketLaunch, ShieldCheck, Stethoscope } from "@phosphor-icons/react";
 import card from "../components/Card.module.css";
+import { More } from "../components/More";
 import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
 import { driftOn } from "../ui/systems.ts";
 import { readingOn } from "../data/crew.ts";
@@ -139,7 +140,6 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   return (
     <div>
       <h1 className={s.title}>Assistant</h1>
-      <p className={s.sub}>Your AI medical officer. It explains and guides; the safety rules decide. It never gives drug doses.</p>
       <div className={s.grid}>
         <section className={`${card.card} ${s.convo}`} aria-label="Conversation with HALO">
           <div className={s.messages} ref={area}>
@@ -201,11 +201,14 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
           </section>
           <section className={card.card} aria-labelledby="guard-h">
             <div className={card.head}><h2 id="guard-h">Guardrails</h2></div>
+            <p className={s.guardLine}>Safety rules run before the AI. It never gives doses or diagnoses.</p>
+            <More label="All 5 rules">
             <ul className={s.guards}>
               {["Emergency rules run before the AI", "Never gives drug doses or changes medicines", "Says what data is consistent with, never a diagnosis", "Says when it's unsure or data is old", "Prototype, not a medical device"].map((g) => (
                 <li key={g}><Check size={16} color="var(--ink-2)" />{g}</li>
               ))}
             </ul>
+            </More>
           </section>
         </div>
       </div>

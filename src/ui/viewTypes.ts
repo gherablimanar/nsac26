@@ -10,6 +10,8 @@ export type PriorityRisk = {
   level: Exclude<RiskLevel, "normal">;
   sinceDay: number;
   why: string;
+  /** One line shown in the hero; the full why opens behind "Why these are linked" */
+  short: string;
   action: string;
   signals: string[]; // field names from data/crew_sim.json
   eventDay: number;

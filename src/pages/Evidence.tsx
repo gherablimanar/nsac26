@@ -9,7 +9,6 @@ export function Evidence(_props: Props) {
   return (
     <div>
       <h1 className={s.title}>Evidence</h1>
-      <p className={s.sub}>Where every rule and number in HALO comes from.</p>
       <div className={s.stack}>
         <section className={card.card} aria-labelledby="rules-h" id="evidence">
           <div className={card.head}><h2 id="rules-h">Coupling rules</h2></div>

@@ -160,7 +160,7 @@ void main(){
  float pm=smoothstep(1.,-1.,dp);float dm=smoothstep(1.,-1.,dd)*smoothstep(1.,-2.,dp);
  float sh=smoothstep(9.,-9.,dropD(p-vec2(0.,5.)))*(1.-dm)*pm*(.11+.07*uDark);
  vec3 c=vec3(0.,.14,.36)*sh;float a=sh;
- float pa=clamp(pm*(fres*.5+spec*.9+spec2),0.,1.);
+ float pa=clamp(pm*(fres*.5+spec*.9+spec2),0.,1.)*(1.-uBare);
  c=mix(vec3(1.),irid,.5*fres)*pa+c*(1.-pa);a=pa+a*(1.-pa);
  float th=lens(dd,11.);
  float cs=caus((p+n.xy*th*18.)*.085,uTime*.9);
