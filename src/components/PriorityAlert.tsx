@@ -1,96 +1,80 @@
-import { ArrowRight, PaperPlaneTilt } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
+import { Check, PaperPlaneTilt } from "@phosphor-icons/react";
 import type { LinkedSeries, PriorityRisk, Task } from "../ui/viewTypes.ts";
+import { easedToday } from "../ui/overviewData.ts";
 import { LinkedSignalsChart } from "./LinkedSignalsChart";
+import { PageField } from "./PageField";
 import { LiquidGlassButton } from "./ui/apple-tahoe-liquid-glass-button";
 import s from "./PriorityAlert.module.css";
 
-type Props = {
-  onReview?: () => void;
-  risk: PriorityRisk | null;
-  series: LinkedSeries[];
-  today: number;
-  delay: string | null;
-  nextTask?: Task;
-  flagged: string[];
-};
+type Props = { risk: PriorityRisk | null; series: LinkedSeries[]; today: number; delay: string | null; nextTask?: Task; flagged: string[]; done: string[]; onDone: (ids: string[]) => void };
 
 /** The one loud thing on the Overview: what is linked, what it shows, what to do. */
-export function PriorityAlert({
-  risk,
-  series,
-  today,
-  delay,
-  nextTask,
-  flagged,
-  onReview,
-}: Props) {
+export function PriorityAlert({ risk, series, today, delay, nextTask, flagged, done, onDone }: Props) {
+  const [why, setWhy] = useState(false);
+  const hero = useRef<HTMLElement>(null);
   if (!risk) {
     const one = flagged.length === 1;
     return (
-      <section className={s.hero} aria-labelledby="risk-title">
-        <p className={s.status}>
-          {flagged.length ? "No linked risks" : "No active demo pattern"}
-        </p>
-        <h1 id="risk-title" className={s.title}>
-          Review your daily observations
-        </h1>
+      <section ref={hero} className={s.hero} aria-labelledby="risk-title">
+        <PageField state="normal" edge={hero} />
+        <p className={s.status}>{flagged.length ? "No linked risks" : "No active demo alert"}</p>
+        <h1 id="risk-title" className={s.title}>Review your daily observations</h1>
         <p className={s.why}>
           {flagged.length
             ? `${flagged.join(" and ")} ${one ? "is" : "are"} outside your normal range, but nothing is linked to ${one ? "it" : "them"}. HALO keeps watching.`
-            : "No persistent linked pattern was established. Unknown inputs and symptoms still need review."}
+            : "No active pattern established; missing inputs and symptoms still require review."}
         </p>
-        {nextTask && (
-          <p className={s.next}>
-            Next on your list: <b>{nextTask.label}</b>
-            {nextTask.when ? `, ${nextTask.when.toLowerCase()}` : ""}
-          </p>
-        )}
+        {nextTask && <p className={s.next}>Next on your list: <b>{nextTask.label}</b>{nextTask.when ? `, ${nextTask.when.toLowerCase()}` : ""}</p>}
       </section>
     );
   }
+  // Act eases to Watch once today's drinking is done; the readings themselves update tomorrow
+  const level = risk.level;
   return (
-    <section className={s.hero} aria-labelledby="risk-title">
-      <p className={s.status}>
-        <b>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;since Day{" "}
-        {risk.sinceDay}
-      </p>
-      <h1 id="risk-title" className={s.title}>
-        {risk.title}
-      </h1>
-      <p className={s.why}>{risk.why}</p>
+    <section ref={hero} className={s.hero} aria-labelledby="risk-title">
+      <PageField state={level} edge={hero} />
+      <p className={s.status}><b className={level === "act" ? s.actWord : ""}>{level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;since Day {risk.sinceDay}</p>
+      <h1 id="risk-title" className={s.title}>{level === "act" ? <mark className={s.alarm}>{risk.actTitle ?? risk.title}</mark> : risk.title}</h1>
+      <p className={s.why}>{risk.short}</p>
       <div className={s.chart}>
-        <LinkedSignalsChart
-          series={series}
-          eventDay={risk.eventDay}
-          eventLabel={risk.eventLabel}
-          today={today}
-        />
+        <LinkedSignalsChart series={series} eventDay={risk.eventDay} eventLabel={risk.eventLabel} today={today} />
+      </div>
+      {/* A real to-do: tick steps off; the big button is always the next step */}
+      <div className={s.plan}>
+        <div className={s.planHead}><h2>Today's plan</h2><span><span className={`mono ${done.length ? s.count : ""}`}>{done.length}</span> of {risk.plan.length} done</span></div>
+        <ol className={s.steps}>
+          {risk.plan.map((p) => {
+            const isDone = done.includes(p.id);
+            return (
+              <li key={p.id}>
+                <label className={`${s.step} ${isDone ? s.stepDone : ""}`}>
+                  <input type="checkbox" checked={isDone} onChange={() => onDone(isDone ? done.filter((x) => x !== p.id) : [...done, p.id])} />
+                  <span className={s.box} aria-hidden="true">{isDone && <Check size={14} weight="bold" />}</span>
+                  <span>{p.label}<small>{p.when}</small></span>
+                </label>
+              </li>
+            );
+          })}
+        </ol>
       </div>
       <div className={s.act}>
-        <button className={s.cta} onClick={onReview}>
-          {risk.action}
-          <ArrowRight size={18} />
-        </button>
+        {(() => {
+          const next = risk.plan.find((p) => !done.includes(p.id));
+          return next
+            ? <button className={s.cta} onClick={() => onDone([...done, next.id])}><Check size={18} weight="bold" /><span key={next.id} className={s.ctaLabel}>{next.cta}</span></button>
+            : <span className={s.allDone}><Check size={18} weight="bold" />Action recorded. Severity is unchanged until measurements are reassessed.</span>;
+        })()}
         <LiquidGlassButton asChild interactive material="clear">
-          <a
-            className={s.glassBtn}
-            href="#evidence"
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent("halo-navigate", { detail: "evidence" }),
-              )
-            }
-          >
-            Why these are linked
-          </a>
+          <button type="button" className={s.glassBtn} aria-expanded={why} aria-controls="why-more" onClick={() => setWhy(!why)}>Why these are linked</button>
         </LiquidGlassButton>
-        {delay && (
-          <span className={s.queued}>
-            <PaperPlaneTilt size={16} />
-            Scenario one-way delay: <span className="mono">{delay}</span>
-          </span>
-        )}
       </div>
+      {why && (
+        <div id="why-more" className={s.whyMore}>
+          <p>{risk.why}</p>
+          {delay && <p className={s.queued}><PaperPlaneTilt size={16} />No report was sent. Scenario one-way delay: <span className="mono">{delay}</span></p>}
+        </div>
+      )}
     </section>
   );
 }

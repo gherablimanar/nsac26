@@ -49,3 +49,7 @@
   .top { left: 116px; }
   .push { display: none; }
 }
+
+/* The selected astronaut's avatar takes the Mars orange */
+.top :global(.nimbus-item svg circle) { transition: fill 0.2s ease-out; }
+.top :global(.nimbus-item[aria-current="page"] svg circle) { fill: var(--accent); }

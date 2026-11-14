@@ -1,92 +1,62 @@
+import {contextOf} from "../data/crew";
 import { useMemo } from "react";
-import { BodyMap } from "../components/BodyMap";
+import { BodyCard } from "../components/BodyCard";
 import { LatestReadings } from "../components/LatestReadings";
+import { QuickLinks, type QuickLink } from "../components/QuickLinks";
+import type { Page } from "../components/Sidebar";
 import { PriorityAlert } from "../components/PriorityAlert";
 import { TodayTasks } from "../components/TodayTasks";
-import type { BodySystemId, RiskLevel } from "../ui/viewTypes.ts";
-import { assessCrew } from "../engine/assessment.ts";
-import { historyOf } from "../data/crew.ts";
-import type { MissionProfile } from "../engine/types.ts";
+import { buildBodyMapModel } from "../bodymap/model.ts";
+import { REGIONS, type RegionId } from "../bodymap/regions.ts";
+import { MISSION_PROFILE, historyOf } from "../data/crew";
 import { buildOverview } from "../ui/overviewData.ts";
+import { MED_BY_ID, clockNow, nextDose, type MedDay } from "../ui/medicinesData.ts";
+import { joinAnd } from "../ui/text.ts";
 import s from "./Overview.module.css";
 
-/** The soft colour field behind the hero. Its colour is the risk state: blue normal, amber watch, red act. */
-export function Field({ state }: { state: RiskLevel }) {
-  return <div className={s.field} data-state={state} aria-hidden="true" />;
-}
 
 type Props = {
-  crewId: string;
-  day: number;
-  delay: string | null;
-  profile?: MissionProfile;
-  assessment?: ReturnType<typeof assessCrew>;
-  onOpenHealth: (id: BodySystemId) => void;
+  crewId: string; day: number; delay: string | null; onOpenHealth: (id: RegionId) => void; done: string[]; onDone: (ids: string[]) => void;
+  logged: boolean; meds: MedDay; profileName: string; onNavigate: (p: Page) => void;
 };
 
-export function Overview({
-  crewId,
-  day,
-  delay,
-  profile = "mars_transit",
-  assessment,
-  onOpenHealth,
-}: Props) {
-  const m = useMemo(
-    () => buildOverview(crewId, day, profile, assessment),
-    [crewId, day, profile, assessment],
-  );
+export function Overview({ crewId, day, delay, onOpenHealth, done, onDone, logged, meds, profileName, onNavigate }: Props) {
+  const m = useMemo(() => buildOverview(crewId, day), [crewId, day]);
   const next = m.tasks.find((t) => !t.done);
+  const body = useMemo(() => buildBodyMapModel(historyOf(crewId), day, MISSION_PROFILE, contextOf(crewId,day)), [crewId, day]);
+  const flaggedDefs = REGIONS.filter((d) => body.regions[d.id].status === "watch" || body.regions[d.id].status === "act");
+  const flagged = flaggedDefs.map((d) => d.name);
+  const anyAct = flaggedDefs.some((d) => body.regions[d.id].status === "act");
+  const dose = nextDose(crewId, meds, clockNow());
+
+  const links: QuickLink[] = [
+    { id: "log", label: "Daily Log", status: logged ? `Done for Day ${day}` : "Not done today", tone: logged ? "done" : "watch", onOpen: () => onNavigate("log") },
+    {
+      id: "health", label: "Body systems",
+      status: flagged.length ? `${joinAnd(flagged.slice(0, 2))}${flagged.length > 2 ? ` +${flagged.length - 2}` : ""}` : "No measured region flagged",
+      tone: anyAct ? "act" : flagged.length ? "watch" : undefined,
+      onOpen: () => onOpenHealth(flaggedDefs[0]?.id ?? "heart"),
+    },
+    {
+      id: "medicines", label: "Medicines",
+      status: dose ? `${MED_BY_ID[dose.dose.medId].name} ${dose.status === "Overdue" ? "overdue" : dose.status === "Due now" ? "due now" : `at ${dose.dose.time}`}` : "Today's doses done",
+      tone: dose?.status === "Overdue" ? "act" : dose?.status === "Due now" ? "watch" : dose ? undefined : "done",
+      onOpen: () => onNavigate("medicines"),
+    },
+    { id: "assistant", label: "Assistant", status: "Ask HALO anything", onOpen: () => onNavigate("assistant") },
+    { id: "mission", label: "Mission", status: `Day ${day}, ${profileName}`, onOpen: () => onNavigate("mission") },
+  ];
+
   return (
     <>
-      <p>
-        Unknown patterns:{" "}
-        {assessCrew(historyOf(crewId), day, profile).unknown.join(", ") ||
-          "none"}
-        . Demo rules; not medical clearance.
-      </p>
-      <PriorityAlert
-        onReview={() =>
-          onOpenHealth(
-            m.systems.find((x) => x.status === "act" || x.status === "watch")
-              ?.id ?? "heart",
-          )
-        }
-        risk={m.risk}
-        series={m.series}
-        today={day}
-        delay={delay}
-        nextTask={next}
-        flagged={m.systems
-          .filter((x) => x.status === "watch" || x.status === "act")
-          .map((x) => x.label)}
-      />
-      {m.risk && (
-        <p className={s.others}>
-          Other linked risks: {m.risk.otherRisks.join(", ")}. Review each
-          pattern and its uncertainty.
-        </p>
-      )}
+      <QuickLinks links={links} />
+      <PriorityAlert risk={m.risk} series={m.series} today={day} delay={delay} nextTask={next} done={done} onDone={onDone}
+        flagged={flagged} />
       <div className={s.below}>
         <TodayTasks key={crewId} initial={m.tasks} />
-        <BodyMap
-          systems={m.systems}
-          onSelect={onOpenHealth}
-          onOpen={() =>
-            onOpenHealth(
-              m.systems.find((x) => x.status === "watch" || x.status === "act")
-                ?.id ?? "heart",
-            )
-          }
-        />
-        <LatestReadings
-          readings={m.readings}
-          onAll={() => onOpenHealth("heart")}
-        />
+        <BodyCard crewId={crewId} day={day} onSelect={onOpenHealth} onOpen={(id) => onOpenHealth(id ?? "heart")} />
+        <LatestReadings readings={m.readings} onAll={() => onOpenHealth("heart")} />
       </div>
     </>
   );
 }
-
-export const overviewState = (crewId: string, day: number): RiskLevel =>
-  buildOverview(crewId, day).risk?.level ?? "normal";

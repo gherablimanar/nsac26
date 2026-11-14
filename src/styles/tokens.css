@@ -17,6 +17,17 @@
   --mars: #C1440E;
   --mars-deep: #8E2F08;
 
+  /* Accent: the Mars orange from the logo, for things you touch (checked, selected, focus, links).
+     Never for status: status keeps amber (watch) and red (act). #C1440E on white is 5.1:1. */
+  --accent: #C1440E;
+  --accent-hover: #A3380B;
+  --accent-soft: rgba(193, 68, 14, 0.1);
+
+  /* Motion: every block that appears (page parts, cards, panels, dropdowns, messages) takes --enter to come in */
+  --enter: 150ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.5, 0.64, 1);
+
   /* Chart */
   --line-in: #555C6B;
   --line-out: #9A4A00;
@@ -48,5 +59,18 @@ html, body { margin: 0; }
 body { background: var(--page); color: var(--ink); font: 15px/1.5 var(--sans); }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Every control eases its colour changes instead of snapping */
+button, a, input, textarea { transition: background-color 0.16s ease-out, color 0.16s ease-out, border-color 0.16s ease-out, box-shadow 0.16s ease-out, transform 0.12s ease-out; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes lift { from { opacity: 0; transform: translateY(4px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.4); } }
+@keyframes press { from { transform: scale(0.88); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

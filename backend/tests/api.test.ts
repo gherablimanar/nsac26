@@ -16,7 +16,7 @@ test("health, JSON contracts, evidence and exact real source values", async () =
     assert.equal(m.readings, 360);
     assert.equal(m.crew.length, 3);
     const s = (await a.inject(url("snapshot"))).json();
-    assert.equal(s.reading.fluid_intake_ml, 1444);
+    assert.equal(s.reading.fluid_intake_ml, 1416);
     assert.equal(s.provenance.kind, "simulated");
     assert.equal(s.assessment.priority.level, "Act");
     assert.equal(
@@ -391,6 +391,55 @@ test("audit logs contain metadata instead of assistant questions", async () => {
     const logs = (await a.inject("/api/audit")).body;
     assert.ok(!logs.includes("PRIVATE TEXT"));
     assert.ok(logs.includes("/api/assistant"));
+  } finally {
+    await a.close();
+  }
+});
+
+test("medicine-day logs persist per crew/day without implying transmission", async () => {
+  const a = await build();
+  try {
+    const state = {
+      taken: { vitamin: "08:00" },
+      skipped: {},
+      extra: [],
+      notes: [{ text: "Review stock", time: "09:00" }],
+    };
+    const saved = await a.inject({
+      method: "POST",
+      url: "/api/medication-day",
+      payload: { crewId: "C2", day: 60, state },
+    });
+    assert.equal(saved.statusCode, 200);
+    const read = (await a.inject(url("medication-day"))).json();
+    assert.deepEqual(read.state, state);
+    assert.equal(read.transmitted, false);
+    assert.equal(read.provenance, "user_entered_demo");
+    assert.deepEqual(
+      (await a.inject(url("medication-day", "C1", 60))).json().state.taken,
+      {},
+    );
+    assert.deepEqual(
+      (await a.inject(url("medication-day", "C2", 59))).json().state.taken,
+      {},
+    );
+    assert.equal(
+      (
+        await a.inject({
+          method: "POST",
+          url: "/api/medication-day",
+          payload: {
+            crewId: "C2",
+            day: 60,
+            state: {
+              ...state,
+              notes: [{ text: "x".repeat(2001), time: "09:00" }],
+            },
+          },
+        })
+      ).statusCode,
+      422,
+    );
   } finally {
     await a.close();
   }

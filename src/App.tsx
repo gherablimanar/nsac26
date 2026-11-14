@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sidebar, type Page } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { DEMO_DAY, MISSION_PROFILE, SIM, crewById } from "./data/crew.ts";
-import { Field, Overview, overviewState } from "./pages/Overview";
+import { Overview } from "./pages/Overview";
+import { RiskBanner } from "./components/RiskBanner";
+import { buildOverview, easedToday } from "./ui/overviewData.ts";
 import { Health } from "./pages/Health";
 import { DailyLog } from "./pages/DailyLog";
 import { Assistant } from "./pages/Assistant";
@@ -10,11 +12,31 @@ import { Mission } from "./pages/Mission";
 import { Medicines } from "./pages/Medicines";
 import { Evidence } from "./pages/Evidence";
 import { Settings, type Look } from "./pages/Settings";
-import type { BodySystemId } from "./ui/viewTypes.ts";
+import { QuickCheckin } from "./components/QuickCheckin";
+import { EMPTY_DAY, type MedDay } from "./ui/medicinesData.ts";
+import type { RegionId } from "./bodymap/regions.ts";
 import s from "./App.module.css";
 import controls from "./shared/Workbench.module.css";
-import type { MissionProfile } from "./engine/types.ts";
-import { api, query, pullCheckins, syncCheckins } from "./shared/api.ts";
+import {
+  api,
+  query,
+  pullCheckins,
+  syncCheckins,
+  localCheckins,
+} from "./shared/api.ts";
+
+const PROFILE_NAME =
+  MISSION_PROFILE === "mars_transit"
+    ? "Mars transit"
+    : MISSION_PROFILE === "moon"
+      ? "Moon surface"
+      : "ISS";
+const DELAY =
+  MISSION_PROFILE === "mars_transit"
+    ? "18 min"
+    : MISSION_PROFILE === "moon"
+      ? "1 s"
+      : null;
 
 const readLook = (): Look => {
   try {
@@ -26,10 +48,10 @@ const readLook = (): Look => {
 
 export default function App() {
   const [day, setDay] = useState(DEMO_DAY);
-  const [profile, setProfile] = useState<MissionProfile>(MISSION_PROFILE);
   const [revision, setRevision] = useState(0);
+  const [backendStatus, setBackendStatus] = useState("On-device analysis");
   useEffect(() => {
-    const change = () => setRevision((x) => x + 1);
+    const change = () => setRevision((n) => n + 1);
     window.addEventListener("halo-data-change", change);
     window.addEventListener("online", syncCheckins);
     syncCheckins();
@@ -38,31 +60,24 @@ export default function App() {
       window.removeEventListener("online", syncCheckins);
     };
   }, []);
-  const delay =
-    profile === "mars_transit" ? "20 min" : profile === "moon" ? "1 s" : null;
   const [page, setPage] = useState<Page>("overview");
   const [crewId, setCrewId] = useState("C2"); // demo story: Marco Ricci
-  const [serverSnapshot, setServerSnapshot] = useState<any>(null);
   useEffect(() => {
     let cancelled = false;
-    setServerSnapshot(null);
-    pullCheckins({ crewId, day, profile });
-    api("/snapshot?" + query({ crewId, day, profile }))
-      .then((value) => {
-        if (!cancelled) setServerSnapshot(value);
+    pullCheckins({ crewId, day, profile: MISSION_PROFILE });
+    api("/snapshot?" + query({ crewId, day, profile: MISSION_PROFILE }))
+      .then(() => {
+        if (!cancelled) setBackendStatus("Connected analysis");
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setBackendStatus("On-device analysis");
+      });
     return () => {
       cancelled = true;
     };
-  }, [crewId, day, profile, revision]);
-  useEffect(() => {
-    const go = (event: Event) => setPage((event as CustomEvent).detail);
-    window.addEventListener("halo-navigate", go);
-    return () => window.removeEventListener("halo-navigate", go);
-  }, []);
+  }, [crewId, day, revision]);
   const [look, setLook] = useState<Look>(readLook);
-  const [system, setSystem] = useState<BodySystemId | null>(null);
+  const [system, setSystem] = useState<RegionId | null>(null);
   const [urgent, setUrgent] = useState(false);
 
   useEffect(() => {
@@ -74,7 +89,7 @@ export default function App() {
     }
   }, [look]);
 
-  const openHealth = (id: BodySystemId) => {
+  const openHealth = (id: RegionId) => {
     setSystem(id);
     setPage("health");
   };
@@ -82,13 +97,69 @@ export default function App() {
     setUrgent(false);
     setPage(p);
   };
+  const risk = useMemo(
+    () => buildOverview(crewId, day).risk,
+    [crewId, day, revision],
+  );
+  const [planDone, setPlanDone] = useState<Record<string, string[]>>({});
+  const done = planDone[crewId] ?? [];
+  const setDone = (ids: string[]) =>
+    setPlanDone((m) => ({ ...m, [crewId]: ids }));
+  const actRisk =
+    risk?.level === "act" && !easedToday(risk, done) ? risk : null;
+
+  // Today's Daily Log, per crew member: the homepage asks once ("How are you doing?") until it's saved
+  const [logged, setLogged] = useState<Record<string, boolean>>({});
+  const [quickMood, setQuickMood] = useState<Record<string, number>>({});
+  const [later, setLater] = useState<Record<string, boolean>>({});
+  const [meds, setMeds] = useState<Record<string, MedDay>>({});
+  const medKey = `${crewId}:${day}`;
+  const medsToday =
+    meds[medKey] ??
+    (() => {
+      try {
+        return (
+          JSON.parse(
+            localStorage.getItem("halo-med-day-" + medKey) ?? "null",
+          ) ?? EMPTY_DAY
+        );
+      } catch {
+        return EMPTY_DAY;
+      }
+    })();
+  const changeMeds = (state: MedDay) => {
+    setMeds((m) => ({ ...m, [medKey]: state }));
+    localStorage.setItem("halo-med-day-" + medKey, JSON.stringify(state));
+    api("/medication-day", { crewId, day, state }).catch(() => {});
+  };
+  useEffect(() => {
+    let cancelled = false;
+    api("/medication-day?" + query({ crewId, day, profile: MISSION_PROFILE }))
+      .then((r) => {
+        if (
+          !cancelled &&
+          r.state &&
+          !localStorage.getItem("halo-med-day-" + medKey)
+        )
+          setMeds((m) => ({ ...m, [medKey]: r.state }));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [crewId, day]);
+  const firstName = crewById(crewId).name.split(" ").slice(-2)[0];
+  const askCheckin =
+    page === "overview" &&
+    !logged[crewId] &&
+    !later[crewId] &&
+    !localCheckins().some((l) => l.crewId === crewId && l.day === day);
 
   return (
     <>
-      {page === "overview" && <Field state={overviewState(crewId, day)} />}
       <Sidebar page={page} onNavigate={navigate} />
       <TopBar
-        profile={profile}
+        profile={MISSION_PROFILE}
         day={day}
         crew={SIM.crew}
         selected={crewById(crewId)}
@@ -98,7 +169,7 @@ export default function App() {
           setPage("assistant");
         }}
       />
-      <main className={s.main}>
+      <main key={`${crewId}-${day}`} className={s.main}>
         <div className={controls.toolbar}>
           <label>
             Demo day{" "}
@@ -112,18 +183,6 @@ export default function App() {
                 setDay(Math.max(1, Math.min(120, Number(e.target.value) || 1)))
               }
             />
-          </label>
-          <label>
-            Mission{" "}
-            <select
-              aria-label="Mission"
-              value={profile}
-              onChange={(e) => setProfile(e.target.value as MissionProfile)}
-            >
-              <option value="mars_transit">Mars transit</option>
-              <option value="iss">ISS</option>
-              <option value="moon">Moon</option>
-            </select>
           </label>
           <button
             className={controls.secondary}
@@ -161,30 +220,30 @@ export default function App() {
           >
             Readiness event
           </button>
-          <span>
-            Simulated crew · demo rules · not a medical device ·{" "}
-            {serverSnapshot ? "Connected analysis" : "On-device analysis"}
-          </span>
+          <span>{backendStatus} · fictional crew · demo rules</span>
         </div>
+        {actRisk && page !== "overview" && (
+          <RiskBanner risk={actRisk} onOpen={() => navigate("overview")} />
+        )}
         {page === "overview" && (
           <Overview
-            assessment={
-              serverSnapshot?.selection.crewId === crewId &&
-              serverSnapshot?.selection.day === day
-                ? serverSnapshot.assessment
-                : undefined
-            }
-            key={revision}
-            profile={profile}
+            key={`${crewId}-${day}-${revision}`}
             crewId={crewId}
             day={day}
-            delay={delay}
+            delay={DELAY}
             onOpenHealth={openHealth}
+            done={done}
+            onDone={setDone}
+            logged={!!logged[crewId]}
+            meds={medsToday}
+            profileName={PROFILE_NAME}
+            onNavigate={navigate}
           />
         )}
         {page === "settings" && <Settings look={look} onLook={setLook} />}
         {page === "health" && (
           <Health
+            key={`${crewId}-${day}-${revision}`}
             crewId={crewId}
             day={day}
             selected={system}
@@ -193,29 +252,45 @@ export default function App() {
         )}
         {page === "log" && (
           <DailyLog
-            key={`${crewId}-${day}`}
-            profile={profile}
             crewId={crewId}
             day={day}
+            quickMood={quickMood[crewId] ?? null}
+            onSaved={() => setLogged((m) => ({ ...m, [crewId]: true }))}
           />
         )}
         {page === "assistant" && (
-          <Assistant
-            profile={profile}
+          <Assistant crewId={crewId} day={day} delay={DELAY} urgent={urgent} />
+        )}
+        {page === "mission" && <Mission crewId={crewId} day={day} />}
+        {page === "medicines" && (
+          <Medicines
             crewId={crewId}
             day={day}
-            delay={delay}
-            urgent={urgent}
+            delay={DELAY}
+            today={medsToday}
+            onChange={changeMeds}
           />
-        )}
-        {page === "mission" && (
-          <Mission profile={profile} crewId={crewId} day={day} />
-        )}
-        {page === "medicines" && (
-          <Medicines profile={profile} crewId={crewId} day={day} />
         )}
         {page === "evidence" && <Evidence />}
       </main>
+      {askCheckin && (
+        <QuickCheckin
+          key={`${crewId}-${day}`}
+          name={firstName}
+          day={day}
+          mood={quickMood[crewId] ?? null}
+          onMood={(m) => setQuickMood((q) => ({ ...q, [crewId]: m }))}
+          onOpenLog={() => {
+            setLater((l) => ({ ...l, [crewId]: true }));
+            navigate("log");
+          }}
+          onTalk={() => {
+            setLater((l) => ({ ...l, [crewId]: true }));
+            navigate("assistant");
+          }}
+          onLater={() => setLater((l) => ({ ...l, [crewId]: true }))}
+        />
+      )}
     </>
   );
 }

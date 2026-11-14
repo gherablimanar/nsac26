@@ -41,9 +41,13 @@ SLEEP_ACTUAL_MEAN = 6.0             # hours
 MARS_CRUISE_DOSE = 1.8              # mSv/day
 CALF_LOSS_6_MONTHS = 13.0           # % volume
 INTAKE_FRACTION = 0.80              # share of needed energy actually eaten
+BP_SHIFT = (-8, -9)                 # mmHg sys/dia, 24-h ambulatory, days 85-192 (Norsk et al. 2015)
+TEMP_RISE = 0.6                     # C by day 75, then plateau (Stahn et al. 2017 saw +1.0; low option so it does not read as fever)
+MASS_LOSS_FIRST_MONTH = (2.0, 4.0)  # % lost in the first 30 days, then stable (NASA ISS body mass data)
+DOSE_SD = 0.2                       # mSv/day day-to-day spread (MSL RAD 1.75 +/- 0.30, Guo et al. 2015)
 
 # ---- Demo parameters (ours, label them as such in the app) -------------
-SOLAR_STORM_DAYS = {40: 25.0, 41: 8.0}   # DEMO extra mSv on those days
+SOLAR_STORM_DAYS = {40: 14.0, 41: 4.0}   # DEMO extra mSv; 18 total, inside what MSL RAD saw per event (1.2-19.5)
 FLUID_DROP_START = 55                    # DEMO
 FLUID_DROP_CREW = "C2"
 SHORT_SLEEP_DAY = 70                     # DEMO
@@ -54,15 +58,15 @@ EVA_DAY = 70                             # spacewalk scheduled same day
 CREW = [
     {"id": "C1", "name": "Commander Aiko Sato", "role": "Commander", "age": 44, "sex": "F",
      "baseline": {"heart_rate": 58, "bp_sys": 112, "bp_dia": 72, "temp_c": 36.6, "spo2": 98,
-                  "glucose_mg_dl": 88, "body_mass_kg": 61.0, "fluid_ml": 2600, "sodium_mg": 3200,
+                  "glucose_mg_dl": 88, "body_mass_kg": 61.0, "fluid_ml": 2300, "sodium_mg": 4200,
                   "kcal_need": 2200, "reaction_ms": 255, "vit_d_ng_ml": 38}},
     {"id": "C2", "name": "Flight Engineer Marco Ricci", "role": "Flight Engineer", "age": 38, "sex": "M",
      "baseline": {"heart_rate": 62, "bp_sys": 120, "bp_dia": 78, "temp_c": 36.7, "spo2": 98,
-                  "glucose_mg_dl": 92, "body_mass_kg": 78.0, "fluid_ml": 2800, "sodium_mg": 3600,
+                  "glucose_mg_dl": 92, "body_mass_kg": 78.0, "fluid_ml": 2500, "sodium_mg": 4800,
                   "kcal_need": 2800, "reaction_ms": 245, "vit_d_ng_ml": 34}},
     {"id": "C3", "name": "Medical Officer Lena Okafor", "role": "Crew Medical Officer", "age": 41, "sex": "F",
      "baseline": {"heart_rate": 60, "bp_sys": 116, "bp_dia": 74, "temp_c": 36.6, "spo2": 99,
-                  "glucose_mg_dl": 86, "body_mass_kg": 66.0, "fluid_ml": 2500, "sodium_mg": 3000,
+                  "glucose_mg_dl": 86, "body_mass_kg": 66.0, "fluid_ml": 2200, "sodium_mg": 4000,
                   "kcal_need": 2300, "reaction_ms": 250, "vit_d_ng_ml": 40}},
 ]
 
@@ -84,7 +88,7 @@ def simulate(member):
 
     bone = 100.0           # % of pre-flight bone density
     calf = 100.0           # % of pre-flight calf volume
-    mass = b["body_mass_kg"]
+    mass_loss = random.uniform(*MASS_LOSS_FIRST_MONTH) / 100
     vit_d = b["vit_d_ng_ml"]
     cum_dose = 0.0
     sleep_debt = 0.0
@@ -103,10 +107,10 @@ def simulate(member):
 
         # Hydration and sodium
         fluid = b["fluid_ml"] + noise(150)
-        sodium = b["sodium_mg"] + noise(250)
+        sodium = b["sodium_mg"] + noise(500)
         if cid == FLUID_DROP_CREW and day >= FLUID_DROP_START:
             fluid = b["fluid_ml"] * 0.55 + noise(100)          # drinks ~45% less
-            sodium += 600                                        # saltier food
+            sodium += 1000                                       # saltier food (DEMO)
             exercise_factor += 0.3                               # skips workouts
             if day == FLUID_DROP_START:
                 events.append("fluid_intake_drop")
@@ -129,7 +133,7 @@ def simulate(member):
         sleep_debt = max(0, sleep_debt * 0.7 + (7.5 - sleep))   # DEMO decay model
 
         # Radiation
-        dose = MARS_CRUISE_DOSE + noise(0.05)
+        dose = max(0.8, MARS_CRUISE_DOSE + noise(DOSE_SD))
         in_shelter = False
         if day in SOLAR_STORM_DAYS:
             dose += SOLAR_STORM_DAYS[day]
@@ -145,7 +149,7 @@ def simulate(member):
 
         # Nutrition: crews eat ~80% of need -> slow mass loss; no UV -> vitamin D falls
         kcal = b["kcal_need"] * INTAKE_FRACTION + noise(120)
-        mass -= (b["kcal_need"] - kcal) / 7700 * 0.5              # DEMO: half the deficit shows as mass
+        mass = b["body_mass_kg"] * (1 - mass_loss * min(1, day / 30)) + noise(0.25)  # most loss in month 1
         vit_d -= 0.08 + noise(0.02)                                 # DEMO decline per day
 
         # Vitals
@@ -154,10 +158,10 @@ def simulate(member):
         row = {
             "crew_id": cid,
             "day": day,
-            "heart_rate": round(b["heart_rate"] + 2 + stress + noise(2)),
-            "bp_sys": round(b["bp_sys"] - 3 + noise(4)),
-            "bp_dia": round(b["bp_dia"] + noise(3)),
-            "temp_c": round(b["temp_c"] + 0.3 + noise(0.15), 1),   # slight in-flight rise
+            "heart_rate": round(b["heart_rate"] + 1 + (stress - 2) + noise(2.5)),   # 24-h mean ~unchanged in flight (Norsk 2015)
+            "bp_sys": round(b["bp_sys"] + BP_SHIFT[0] * min(1, day / 14) + noise(4)),
+            "bp_dia": round(b["bp_dia"] + BP_SHIFT[1] * min(1, day / 14) + noise(3)),
+            "temp_c": round(b["temp_c"] + TEMP_RISE * min(1, day / 75) + noise(0.12), 1),  # slow "space fever" rise
             "spo2": round(clamp(b["spo2"] + noise(0.6), 94, 100)),
             "glucose_mg_dl": round(b["glucose_mg_dl"] + noise(6)),
             "sleep_hours": round(sleep, 1),

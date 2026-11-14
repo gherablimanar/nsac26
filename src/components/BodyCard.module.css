@@ -1,0 +1,35 @@
+/* Leo's figure reads its colours from --bm-* variables; these are the light versions for HALO's cards.
+   Normal parts stay quiet grey, so only Watch (amber) and Act (red) stand out. */
+.card {
+  --bm-stage: var(--card);
+  --bm-nominal: #A3AAB8;
+  --bm-watch: var(--watch-mark);
+  --bm-watch-glow: rgba(224, 138, 30, 0.35);
+  --bm-act: var(--act);
+  --bm-act-glow: rgba(180, 43, 35, 0.3);
+  --bm-unknown: #B3B9C4;
+  --bm-selected: var(--ink);
+  --bm-silhouette: #EEF0F4;
+  --bm-organ: #E2E6ED;
+  --bm-organ-strong: #D5DAE3;
+  --bm-organ-behind: #EEF0F4;
+  --bm-muscle: #E6E9EF;
+  --bm-bone-fill: #F6F7F9;
+  --bm-detail: rgba(16, 19, 26, 0.22);
+}
+
+.layout { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; margin-top: 16px; }
+.full .layout { grid-template-columns: 150px 1fr; }
+/* Front/Back: the body turns around (keyed by view, so each switch replays it) */
+.figure { min-width: 0; perspective: 700px; }
+.figure > svg { transform-origin: 50% 50%; animation: turn 0.32s var(--ease-out) both; }
+@keyframes turn { from { opacity: 0; transform: rotateY(-75deg) scale(0.96); } 60% { opacity: 1; } }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.row { width: 100%; display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border: 0; background: none; font-size: 14px; text-align: left; cursor: pointer; }
+.row span { color: var(--ink-2); white-space: nowrap; }
+.row:hover { text-decoration: underline; text-underline-offset: 3px; }
+.rowSelected { font-weight: 600; }
+.row.watch, .row.watch span { color: var(--watch-ink); font-weight: 500; }
+.row.act, .row.act span { color: var(--act); font-weight: 500; }
+.hint { margin: 0; font-size: 13px; color: var(--ink-2); }

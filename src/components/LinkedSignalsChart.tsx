@@ -2,6 +2,9 @@ import { Area, ComposedChart, Line, ReferenceLine, ResponsiveContainer, XAxis, Y
 import type { LinkedSeries } from "../ui/viewTypes.ts";
 import s from "./LinkedSignalsChart.module.css";
 
+/** The lines draw in left to right once, so the eye follows them to the day they changed together. Off with reduced motion. */
+const DRAW = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 // The HALO moment: linked signals stacked on one shared day axis, so you see them move together.
 // Teal/white band = the astronaut's own normal (from the engine). Amber = outside it in the harmful direction.
 
@@ -43,8 +46,8 @@ export function LinkedSignalsChart({ series, eventDay, eventLabel, today }: { se
                   <YAxis hide domain={[lo - pad, hi + pad]} />
                   <Area dataKey="band" stroke="none" fill="var(--band)" isAnimationActive={false} />
                   <ReferenceLine x={eventDay} stroke="var(--ink)" strokeOpacity={0.25} />
-                  <Line dataKey="value" stroke="var(--line-in)" strokeWidth={1.75} dot={false} isAnimationActive={false} />
-                  <Line dataKey="out" stroke="var(--line-out)" strokeWidth={2.5} dot={false} connectNulls={false} isAnimationActive={false} />
+                  <Line dataKey="value" stroke="var(--line-in)" strokeWidth={1.75} dot={false} isAnimationActive={DRAW} animationDuration={900} animationEasing="ease-out" />
+                  <Line dataKey="out" stroke="var(--line-out)" strokeWidth={2.5} dot={false} connectNulls={false} isAnimationActive={DRAW} animationBegin={500} animationDuration={600} animationEasing="ease-out" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>

@@ -137,5 +137,6 @@ assistant and NASA adapter. `src/engine/`: shared computation; `src/shared/`: sh
 triage and browser integration. `backend/resources/`: evidence and historical NASA
 snapshot. `backend/tests/`: engine/API/safety/persistence/browser tests.
 
-Earlier Python work is preserved separately in the workspace/previous branch. This
-branch has one server implementation so scoring stays in the existing TypeScript engine.
+The earlier Python health-only scaffold under `backend/src/halo_backend/` is retained
+from team main for history. It is not used by `npm run server`. The canonical backend
+is Node/Fastify; all scoring stays in the shared TypeScript engine.

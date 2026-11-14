@@ -1,206 +1,346 @@
-import { useEffect, useState } from "react";
-import { api, query, type Selection } from "../shared/api.ts";
-import { readiness } from "../engine/assessment.ts";
-import { historyOf } from "../data/crew.ts";
-import s from "../shared/Workbench.module.css";
-export function Mission({ crewId, day, profile = "mars_transit" }: Selection) {
-  const selected = { crewId, day, profile };
-  const ready = readiness(historyOf(crewId), day, profile);
-  const [outbox, setOutbox] = useState<any[]>([]);
-  const [message, setMessage] = useState("");
-  const [approved, setApproved] = useState(false);
-  const [fluid, setFluid] = useState(1800);
-  const [scenario, setScenario] = useState<any>(null);
-  const [radiation, setRadiation] = useState<any>(null);
-  const [crew, setCrew] = useState<any[]>([]);
-  const delay = profile === "mars_transit" ? 1200 : profile === "moon" ? 1 : 0;
-  async function refresh() {
-    try {
-      setOutbox(await api("/outbox?" + query(selected)));
-    } catch {
-      const rows = JSON.parse(localStorage.getItem("halo-outbox") ?? "[]");
-      setOutbox(
-        rows
-          .filter((r: any) => r.crewId === crewId)
-          .map((r: any) => ({
-            ...r,
-            status:
-              Date.now() >= Date.parse(r.arrivalAt)
-                ? "delivered_simulated"
-                : "queued_simulated",
-          })),
-      );
-    }
-  }
-  useEffect(() => {
-    refresh();
-    api("/crew-overview?" + query(selected))
-      .then((r) => setCrew(r.crew))
-      .catch(() => setCrew([]));
-    api("/radiation")
-      .then(setRadiation)
-      .catch(() => setRadiation(null));
-    const timer = setInterval(refresh, 5000);
-    return () => clearInterval(timer);
-  }, [crewId, day, profile]);
-  async function queue() {
-    if (!approved) return;
-    try {
-      const report = await api("/reports/draft", {
-        ...selected,
-        purpose: "risk_review",
-      });
-      await api("/reports/queue", {
-        reportId: report.id,
-        approved: true,
-        delaySeconds: delay,
-        idempotencyKey: crypto.randomUUID(),
-      });
-      setMessage(
-        "Approved report queued in the simulator. Nothing transmitted.",
-      );
-    } catch {
-      const rows = JSON.parse(localStorage.getItem("halo-outbox") ?? "[]");
-      rows.push({
-        id: crypto.randomUUID(),
-        crewId,
-        day,
-        summary: ready,
-        arrivalAt: new Date(Date.now() + delay * 1000).toISOString(),
-        approved: true,
-        transmitted: false,
-      });
-      localStorage.setItem("halo-outbox", JSON.stringify(rows));
-      setMessage("Saved to on-device simulated outbox. Nothing transmitted.");
-    }
-    refresh();
-  }
-  async function simulate() {
-    try {
-      setScenario(
-        await api("/what-if", {
-          ...selected,
-          horizon: 7,
-          changes: { fluid_intake_ml: fluid },
-        }),
-      );
-    } catch {
-      setScenario({
-        assumptions:
-          "Backend unavailable. Your real demo history has not changed.",
-      });
-    }
-  }
+import { contextOf } from "../data/crew.ts";
+import { BackendTools } from "../components/BackendTools.tsx";
+import { readiness as reviewReadiness } from "../engine/assessment.ts";
+import { useState } from "react";
+import {
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Segmented } from "../components/Segmented";
+import { More } from "../components/More";
+import { PageHero } from "../components/PageHero";
+import { LiquidGlassButton } from "../components/ui/apple-tahoe-liquid-glass-button";
+import card from "../components/Card.module.css";
+import { MISSION_PROFILE, historyOf, readingOn } from "../data/crew";
+import { driftOn } from "../ui/systems";
+import {
+  GATE_OF,
+  OUTBOX,
+  PROFILES,
+  worstGate,
+  type Gate,
+} from "../ui/missionData";
+import type { MissionProfile } from "../engine/types.ts";
+import s from "./Mission.module.css";
+
+type Props = { crewId: string; day: number };
+
+const gateClass = (g: Gate) =>
+  g === "Caution" ? s.caution : g === "No-go" ? s.nogo : "";
+
+export function Mission({ crewId, day }: Props) {
+  const [profile, setProfile] = useState<MissionProfile>(MISSION_PROFILE);
+  const [sent, setSent] = useState("");
+  const [outboxOpen, setOutboxOpen] = useState(false);
+  const p = PROFILES.find((x) => x.id === profile) ?? PROFILES[0];
+
+  const drift = driftOn(crewId, day);
+  const today = readingOn(crewId, day);
+  const history = historyOf(crewId);
+  const storm = !!today?.in_storm_shelter;
+
+  const sleep = drift.sleep_hours,
+    react = drift.reaction_time_ms,
+    rad = drift.radiation_mSv_today;
+  const inputs = [
+    {
+      key: "sleep",
+      label: "Sleep last night",
+      d: sleep,
+      unit: "h",
+      dec: 1,
+      gate: sleep ? GATE_OF[sleep.status] : ("Caution" as Gate),
+      phrase: "lower than",
+    },
+    {
+      key: "react",
+      label: "Reaction time",
+      d: react,
+      unit: "ms",
+      dec: 0,
+      gate: react ? GATE_OF[react.status] : ("Caution" as Gate),
+      phrase: "slower than",
+    },
+    {
+      key: "rad",
+      label: "Radiation today",
+      d: rad,
+      unit: "mSv",
+      dec: 2,
+      gate: storm
+        ? ("No-go" as Gate)
+        : rad
+          ? GATE_OF[rad.status]
+          : ("Caution" as Gate),
+      phrase: "higher than",
+    },
+  ];
+  const evaluation = reviewReadiness(
+    history,
+    day,
+    profile,
+    contextOf(crewId, day),
+  );
+  const overall = evaluation.status;
+  const bad = inputs.filter((i) => i.gate !== "Go");
+  const fine = inputs
+    .filter((i) => i.gate === "Go")
+    .map((i) =>
+      i.label.split(" ")[0].toLowerCase().replace("reaction", "reaction time"),
+    );
+  const lowerCase = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+  const reason =
+    bad.length === 0
+      ? "" // the three Go rows already say it
+      : `${bad.map((i) => (i.key === "rad" && storm ? "Radiation is high because of the solar storm" : `${i.label.replace(" last night", "").replace(" today", "")} is ${i.phrase} your normal`)).join("; ")}${fine.length ? `; ${lowerCase(fine.join(" and "))} ${fine.length > 1 ? "are" : "is"} fine` : ""}.`;
+
+  const eva = history.find((r) => r.eva_scheduled && r.day >= day);
+  const until = eva ? eva.day - day : 0;
+  const evaLine = eva
+    ? `Spacewalk on Day ${eva.day}, ${until === 0 ? "today" : `in ${until} ${until === 1 ? "day" : "days"}`}`
+    : "No spacewalk scheduled in the next 30 days";
+
+  const reactionOpen = react && GATE_OF[react.status] !== "Go";
+  const primary = reactionOpen
+    ? "Take reaction test"
+    : "Send readiness to Houston";
+  const confirm =
+    "Review and approve the report in the simulated outbox below. Nothing sent.";
+
+  const series = history
+    .filter((r) => r.day <= day && r.day > day - 30)
+    .map((r) => ({ day: r.day, mSv: r.radiation_mSv_today }));
+  const stormInRange = series.some((r) => r.day === 40);
+  const ticks = [0, 1, 2, 3]
+    .map((i) => series[Math.round(((series.length - 1) * i) / 3)]?.day)
+    .filter((d): d is number => d !== undefined);
+
   return (
     <>
-      <h1 className={s.title}>Mission</h1>
-      <p className={s.intro}>
-        Transparent demonstration readiness and simulated Earth communication.
-        No operational clearance.
-      </p>
-      <div className={s.grid}>
-        <section className={s.panel}>
-          <h2>Readiness: {ready.status}</h2>
-          <ul>
-            {ready.reasons.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-          <p>
-            Inputs: sleep, reaction time, radiation. Demo drift ≥2: Caution; ≥3
-            or radiation Act: No-go. Missing inputs: Insufficient data.
-          </p>
-          <p className={s.notice}>
-            {ready.limitation} A flight-authorized person must approve the task.
-          </p>
-        </section>
-        <section className={s.panel}>
-          <h2>Flight-surgeon report simulator</h2>
-          <p>
-            Configured one-way delay: {delay} seconds. Actual response time is
-            unknown.
-          </p>
-          <label>
-            <input
-              type="checkbox"
-              checked={approved}
-              onChange={(e) => setApproved(e.target.checked)}
-            />
-            I reviewed and approve queuing this demo snapshot
-          </label>
-          <div className={s.row}>
-            <button className={s.button} disabled={!approved} onClick={queue}>
-              Draft and queue demo report
-            </button>
+      <PageHero
+        page="Mission"
+        state={
+          overall === "Go" ? "normal" : overall === "No-go" ? "act" : "watch"
+        }
+        title={`Demo readiness: ${overall}`}
+        line={`${evaLine}.${reason ? ` ${reason}` : ""}`}
+        aside={
+          <Segmented
+            label="Mission profile"
+            value={profile}
+            onChange={setProfile}
+            options={PROFILES.map((x) => ({ id: x.id, label: x.label }))}
+          />
+        }
+      />
+
+      <div key={profile} className={s.grid}>
+        <section className={`${card.card} ${s.hero}`} aria-labelledby="gate-h">
+          <div className={card.head}>
+            <h2 id="gate-h">
+              {eva ? "Spacewalk readiness" : "Readiness today"}
+            </h2>
           </div>
-          <p role="status">{message}</p>
-          <ul>
-            {outbox.map((q) => (
-              <li key={q.id}>
-                {q.status} · arrival {q.arrivalAt} · transmitted: false
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className={s.panel}>
-          <h2>What-if exploration</h2>
-          <label className={s.field}>
-            Scenario daily fluid intake (mL)
-            <input
-              type="number"
-              min="0"
-              max="10000"
-              value={fluid}
-              onChange={(e) => setFluid(Number(e.target.value))}
-            />
-          </label>
-          <button className={s.secondary} onClick={simulate}>
-            Explore 7 simulated days
-          </button>
-          {scenario && (
-            <div className={s.result}>
-              {scenario.scenario?.priority?.name ?? "No active demo pattern"}
-              <p>{scenario.assumptions}</p>
-            </div>
-          )}
-        </section>
-        <section className={s.panel}>
-          <h2>Crew overview</h2>
-          {crew.length ? (
-            crew.map((c) => (
-              <p key={c.crewId}>
-                {c.crewId}:{" "}
-                {c.assessment.priority?.name ?? "No active demo pattern"} ·{" "}
-                {c.assessment.priority?.level ?? "Nominal"} ·{" "}
-                {c.assessment.unknown.length} unknown patterns
-              </p>
-            ))
-          ) : (
+          <table className={s.inputs}>
+            <thead className={s.srOnly}>
+              <tr>
+                <th>Signal</th>
+                <th>Value</th>
+                <th>Your normal</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {inputs.map((i) => (
+                <tr key={i.key}>
+                  <th scope="row">{i.label}</th>
+                  <td>
+                    <span className="mono">
+                      {i.d ? i.d.value.toFixed(i.dec) : "n/a"}
+                    </span>{" "}
+                    <span className={s.unit}>{i.unit}</span>
+                  </td>
+                  <td className={s.normal}>
+                    {i.d ? (
+                      <>
+                        Your normal{" "}
+                        <span className="mono">
+                          {i.d.bandLo.toFixed(i.dec)} to{" "}
+                          {i.d.bandHi.toFixed(i.dec)}
+                        </span>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                  </td>
+                  <td className={`${s.gateWord} ${gateClass(i.gate)}`}>
+                    {i.gate}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className={s.act}>
+            <button
+              type="button"
+              className={s.cta}
+              onClick={() => {
+                setSent(confirm);
+                const details = document.getElementById(
+                  "backend-tools",
+                ) as HTMLDetailsElement | null;
+                if (details) {
+                  details.open = true;
+                  details.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+            >
+              {primary}
+            </button>
+            <span className={s.confirm} role="status">
+              {sent}
+            </span>
+          </div>
+          {overall !== "Go" && <p className={s.note}>{p.escalation}</p>}
+          <More label="How readiness is decided">
             <p>
-              Crew overview requires the local backend. Individual on-device
-              analysis remains available.
+              Sleep, reaction and radiation are reviewed alongside active risk
+              patterns and unknown inputs. No operational clearance is granted.
+              Thresholds are demo parameters.
+            </p>
+            {overall === "Go" && <p>{p.escalation}</p>}
+          </More>
+        </section>
+
+        <section className={`${card.card} ${s.link}`} aria-labelledby="link-h">
+          <div className={card.head}>
+            <h2 id="link-h">Earth link</h2>
+          </div>
+          {p.delay === "Live link" ? (
+            <p className={s.big}>Live link to Houston</p>
+          ) : (
+            <>
+              <p className={s.lead}>Scenario one-way delay</p>
+              <p className={`${s.big} mono`}>{p.delay}</p>
+            </>
+          )}
+          {p.roundTrip && (
+            <p className={s.roundTrip}>
+              Round trip <span className="mono">{p.roundTrip}</span>
             </p>
           )}
+          <h3 className={s.sub2}>Illustrative outbox preview — not sent</h3>
+          <p className={s.item}>{OUTBOX.title}</p>
+          <p className={s.itemMeta}>
+            Illustrative queue time{" "}
+            <span className="mono">{OUTBOX.queued}</span>, simulated arrival{" "}
+            <span className="mono">{OUTBOX.arrives}</span>
+          </p>
+          <LiquidGlassButton asChild interactive material="clear">
+            <button
+              type="button"
+              className={s.glassBtn}
+              aria-expanded={outboxOpen}
+              onClick={() => setOutboxOpen((o) => !o)}
+            >
+              {outboxOpen ? "Close outbox" : "Open outbox"}
+            </button>
+          </LiquidGlassButton>
+          {outboxOpen && <p className={s.preview}>{OUTBOX.note}</p>}
         </section>
-        <section className={s.panel}>
-          <h2>NASA instrument snapshot</h2>
-          {radiation ? (
-            <>
-              <p>
-                {radiation.status} · {radiation.snapshot.value}{" "}
-                {radiation.snapshot.unit}
+
+        <section className={`${card.card} ${s.rad}`} aria-labelledby="rad-h">
+          <div className={card.head}>
+            <h2 id="rad-h">Radiation</h2>
+          </div>
+          <div className={s.radBody}>
+            <div className={s.radFacts}>
+              <div>
+                <p className={s.label}>Today</p>
+                <p className={s.value}>
+                  <span className="mono">
+                    {today?.radiation_mSv_today.toFixed(2) ?? "n/a"}
+                  </span>{" "}
+                  <span className={s.unit}>mSv</span>
+                </p>
+              </div>
+              <div>
+                <p className={s.label}>Mission total</p>
+                <p className={s.value2}>
+                  <span className="mono">
+                    {today ? Math.round(today.radiation_mSv_total) : "n/a"}
+                  </span>{" "}
+                  <span className={s.unit}>mSv</span>
+                </p>
+              </div>
+              <p className={s.ref}>{p.dose}</p>
+              <p className={storm ? s.stormOn : s.stormOff}>
+                {storm
+                  ? "Solar storm: stay in the shielded shelter"
+                  : "No solar storm alert"}
               </p>
-              <p>
-                Observed {radiation.snapshot.observed_at} at{" "}
-                {radiation.snapshot.location}
-              </p>
-              <p className={s.notice}>{radiation.notice}</p>
-            </>
-          ) : (
-            <p>Backend unavailable; no live radiation reading inferred.</p>
-          )}
+            </div>
+            <div
+              className={s.chart}
+              role="img"
+              aria-label="Radiation per day over the last 30 days"
+            >
+              <ResponsiveContainer width="100%" height={140}>
+                <LineChart
+                  data={series}
+                  margin={{ top: 18, right: 12, bottom: 0, left: 12 }}
+                >
+                  <XAxis
+                    dataKey="day"
+                    type="number"
+                    domain={["dataMin", "dataMax"]}
+                    ticks={ticks}
+                    tickFormatter={(d) => `Day ${d}`}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fontFamily: "var(--mono)",
+                      fontSize: 12,
+                      fill: "#555C6B",
+                    }}
+                  />
+                  <YAxis hide domain={["auto", "auto"]} />
+                  {stormInRange && (
+                    <ReferenceLine
+                      x={40}
+                      stroke="#555C6B"
+                      strokeOpacity={0.4}
+                      label={{
+                        value: "Solar storm, Day 40",
+                        position: "top",
+                        fontSize: 12,
+                        fill: "#555C6B",
+                      }}
+                    />
+                  )}
+                  <Line
+                    dataKey="mSv"
+                    stroke="#555C6B"
+                    strokeWidth={1.75}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </section>
       </div>
+      <details id="backend-tools">
+        <summary>
+          Reviewed report drafts, simulated outbox and what-if tools
+        </summary>
+        <BackendTools crewId={crewId} day={day} profile={profile} />
+      </details>
     </>
   );
 }

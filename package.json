@@ -16,7 +16,8 @@
     "demo": "tsx backend/demo.ts",
     "dev:full": "node scripts/dev-full.mjs",
     "test:browser": "playwright test",
-    "format:check": "prettier --check backend/node backend/tests backend/*.ts src/engine/assessment.ts src/shared"
+    "format:check": "prettier --check backend/node backend/tests backend/*.ts src/engine/assessment.ts src/shared",
+    "check:bodymap": "tsx scripts/check_bodymap.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.4.3",

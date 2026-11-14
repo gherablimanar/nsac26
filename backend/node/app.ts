@@ -16,6 +16,7 @@ import {
   ReportDraft,
   QueueReport,
   Medication,
+  MedicationDay,
   Adherence,
   TestResult,
   WhatIf,
@@ -171,7 +172,11 @@ export async function makeServer(options: Options = {}) {
         vision_score: store.get("test", `${s.crewId}:${s.day}:vision`)?.average,
         sourceProfile: data.meta.mission_profile,
       }),
-      readiness: readiness(history, s.day, s.profile),
+      readiness: readiness(history, s.day, s.profile, {
+        ...store.get("checkin", `${s.crewId}:${s.day}`),
+        vision_score: store.get("test", `${s.crewId}:${s.day}:vision`)?.average,
+        sourceProfile: data.meta.mission_profile,
+      }),
       checkin: store.get("checkin", `${s.crewId}:${s.day}`),
       provenance: {
         kind: "simulated",
@@ -342,6 +347,26 @@ export async function makeServer(options: Options = {}) {
   );
   route("POST", "/api/medications", Medication, (s) =>
     store.put("medication", `${s.crewId}:${s.id}`, s.crewId, s),
+  );
+
+  route("POST", "/api/medication-day", MedicationDay, (s) =>
+    store.put("medication_day", `${s.crewId}:${s.day}`, s.crewId, {
+      ...s,
+      provenance: "user_entered_demo",
+      transmitted: false,
+    }),
+  );
+  route(
+    "GET",
+    "/api/medication-day",
+    Selection,
+    (s) =>
+      store.get("medication_day", `${s.crewId}:${s.day}`) ?? {
+        crewId: s.crewId,
+        day: s.day,
+        state: { taken: {}, skipped: {}, extra: [], notes: [] },
+        transmitted: false,
+      },
   );
   route("POST", "/api/adherence", Adherence, (s, req, reply) => {
     if (!store.get("medication", `${s.crewId}:${s.medicationId}`))

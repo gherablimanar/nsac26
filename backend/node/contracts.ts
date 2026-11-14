@@ -178,3 +178,26 @@ export const MeasurementReview = z
       .max(26),
   })
   .strict();
+
+export const MedicationDay = z
+  .object({
+    crewId: Selection.shape.crewId,
+    day: Selection.shape.day,
+    state: z
+      .object({
+        taken: z.record(z.string().max(100), z.string().max(20)),
+        skipped: z.record(z.string().max(100), z.string().max(200)),
+        extra: z
+          .array(
+            z.object({ medId: z.string().max(100), time: z.string().max(20) }),
+          )
+          .max(100),
+        notes: z
+          .array(
+            z.object({ text: z.string().max(2000), time: z.string().max(20) }),
+          )
+          .max(100),
+      })
+      .strict(),
+  })
+  .strict();

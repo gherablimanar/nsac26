@@ -55,8 +55,9 @@ for (const c of crewIds) {
         (risk.ruleId === "solar_storm" && (d === 40 || d === 41)) ||
         (c === "C2" && d >= 55 && ["kidney_stone", "musculoskeletal"].includes(risk.ruleId)) || // C2 also skips workouts from day 55
         (c === "C3" && d === 70 && risk.ruleId === "cognitive_readiness") ||
-        // the random data has some genuinely bad nights; flagging those is correct
-        (risk.ruleId === "cognitive_readiness" && (r.sleep_hours <= 5.0 || r.radiation_mSv_today > 5));
+        // Simulator uses max(0,5.5-sleep) plus accumulated sleep debt. Include next-day carry-over.
+        // Regression: C1 days27/32/57/98 and C3 day71 were incorrectly called unexplained.
+        (risk.ruleId === "cognitive_readiness" && h.some(n=>n.day>=d-1&&n.day<=d&&(n.sleep_hours<5.5||n.radiation_mSv_today>5)));
       if (!explained) {
         extra++;
         console.log(`  unexplained Act: ${c} day ${d} ${risk.name} (score ${risk.score})`);
