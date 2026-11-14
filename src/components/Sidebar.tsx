@@ -3,7 +3,6 @@ import { Books, ChatCircleText, GearSix, Heartbeat, NotePencil, Pill, Planet, Sq
 import { LiquidGlass } from "./ui/apple-tahoe-liquid-glass-button";
 import { LiquidNavbar } from "./ui/liquid-glass-navbar";
 import s from "./Sidebar.module.css";
-import { BODY_MAP_NAV } from "../bodymap/nav.ts";
 
 export type Page = "overview" | "health" | "log" | "assistant" | "mission" | "medicines" | "evidence" | "settings";
 
@@ -16,7 +15,6 @@ const ITEMS: { id: Page; label: string; icon: Icon }[] = [
   { id: "mission", label: "Mission", icon: Planet },
   { id: "medicines", label: "Medicines", icon: Pill },
   { id: "evidence", label: "Evidence", icon: Books },
-  BODY_MAP_NAV,
   { id: "settings", label: "Settings", icon: GearSix },
 ];
 

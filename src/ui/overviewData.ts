@@ -1,15 +1,17 @@
 // Builds what the Overview shows for one astronaut on one mission day.
 // Bands and drift come from the engine (src/engine/baseline.ts). The priority risk text and the
-// task list are MOCK until the coupling rules in src/rules exist.
+// task list are MOCK; the risk level comes from the coupled risk engine (src/engine/risks.ts).
 import { bandCentreAt, computeBaselines, computeDrift } from "../engine/baseline.ts";
 import { SIGNAL_BY_KEY } from "../engine/signals.ts";
-import { historyOf, readingOn } from "../data/crew.ts";
+import { MISSION_PROFILE, historyOf, readingOn } from "../data/crew.ts";
+import { evaluateRisks } from "../engine/risks.ts";
 import type { BodySystem, LinkedSeries, OverviewModel, PriorityRisk, ReadingSummary, Task } from "./viewTypes.ts";
 import { SYSTEMS, systemStatus } from "./systems.ts";
 
 // MOCK: what the kidney-stone coupling rule (brief p. 7, Siew et al. 2024) would return for Marco.
 const RISKS: Record<string, PriorityRisk> = {
   C2: {
+    ruleId: "kidney_stone",
     title: "Kidney stone risk is rising",
     level: "watch",
     sinceDay: 55,
@@ -51,7 +53,11 @@ export function buildOverview(crewId: string, day: number): OverviewModel {
   const history = historyOf(crewId);
   const bands = computeBaselines(history);
   const drift = computeDrift(history, bands, day);
-  const risk = RISKS[crewId] ?? null;
+  // The engine decides the level ("far outside" can reach Act); no engine risk above Nominal means no hero risk
+  const mock = RISKS[crewId];
+  const engine = mock ? evaluateRisks(history, day, MISSION_PROFILE).find((r) => r.ruleId === mock.ruleId) : undefined;
+  const level = engine?.level === "Act" ? "act" : engine?.level === "Watch" ? "watch" : null;
+  const risk: PriorityRisk | null = mock && level ? { ...mock, level } : null;
 
   const from = day - 14;
   const series: LinkedSeries[] = (risk?.signals ?? []).map((key) => {

@@ -6,6 +6,8 @@ export type RiskLevel = "normal" | "watch" | "act";
 export type SystemStatus = RiskLevel | "unknown";
 
 export type PriorityRisk = {
+  /** Coupling rule in src/rules whose engine level drives this risk */
+  ruleId: string;
   title: string;
   level: Exclude<RiskLevel, "normal">;
   sinceDay: number;

@@ -40,7 +40,7 @@ export function PriorityAlert({ risk, series, today, delay, nextTask, flagged }:
   }
   return (
     <section ref={hero} className={s.hero} aria-labelledby="risk-title">
-      <p className={s.status}><b>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;since Day {risk.sinceDay}</p>
+      <p className={s.status}><b className={risk.level === "act" ? s.actWord : ""}>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;since Day {risk.sinceDay}</p>
       <h1 id="risk-title" className={s.title}>{risk.title}</h1>
       <p className={s.why}>{risk.short}</p>
       <div className={s.chart}>

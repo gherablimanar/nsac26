@@ -116,7 +116,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
   // One-line status so you know where you stand before choosing anything
   const flagged = SYSTEMS.filter((d) => systemStatus(d, drift) === "watch").map((d) => d.label);
   const status = risk
-    ? <><b className={s.watch}>Watch</b>&nbsp;&nbsp;{risk.title} since Day {risk.sinceDay}.</>
+    ? <><b className={risk.level === "act" ? s.act : s.watch}>{risk.level === "act" ? "Act" : "Watch"}</b>&nbsp;&nbsp;{risk.title} since Day {risk.sinceDay}.</>
     : flagged.length
       ? <>No linked risks. {flagged.join(" and ")} {flagged.length === 1 ? "is" : "are"} outside your normal range on {flagged.length === 1 ? "its" : "their"} own.</>
       : <>Your readings are inside your normal range today.</>;
@@ -193,7 +193,7 @@ export function Assistant({ crewId, day, delay, urgent }: Props) {
             <dl className={s.rows}>
               <div><dt>Mission day</dt><dd>Day {mono(String(day))}, Mars transit</dd></div>
               <div><dt>Houston delay</dt><dd>{delay ? <>{mono(delay)} one way</> : "Live"}</dd></div>
-              <div><dt>Linked risk</dt><dd>{risk ? `${risk.title}, Watch since Day ${risk.sinceDay}` : "None right now"}</dd></div>
+              <div><dt>Linked risk</dt><dd>{risk ? `${risk.title}, ${risk.level === "act" ? "Act" : "Watch"} since Day ${risk.sinceDay}` : "None right now"}</dd></div>
               {fluid && <div><dt>Fluid intake</dt><dd className={rowVal(fluid.status !== "inside band")}>{fluidText}</dd></div>}
               {urine && <div><dt>Urine colour</dt><dd className={rowVal(urine.status !== "inside band")}>{urineText}</dd></div>}
               {sodium && <div><dt>Sodium</dt><dd className={rowVal(sodium.status !== "inside band")}>{sodiumText}</dd></div>}

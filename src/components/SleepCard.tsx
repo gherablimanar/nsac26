@@ -27,7 +27,7 @@ export function SleepCard({ crewId, day, onOpen }: Props) {
     <section className={card.card} aria-labelledby="sleep-title">
       <div className={card.head}>
         <h2 id="sleep-title">Last night</h2>
-        <button onClick={onOpen}>Sleep and mind</button>
+        <button onClick={onOpen}>Brain and sleep</button>
       </div>
       <div className={s.top}>
         <span className={`${s.big} ${out ? s.outInk : ""}`}>{last.sleep_hours.toFixed(1)}<small>h</small></span>

@@ -10,9 +10,7 @@ import { Mission } from "./pages/Mission";
 import { Medicines } from "./pages/Medicines";
 import { Evidence } from "./pages/Evidence";
 import { Settings, type Look } from "./pages/Settings";
-import type { BodySystemId } from "./ui/viewTypes.ts";
-import { BodyMapPage } from "./bodymap/BodyMapPage";
-import { BODY_MAP_PAGE } from "./bodymap/nav.ts";
+import type { RegionId } from "./bodymap/regions.ts";
 import s from "./App.module.css";
 
 const DELAY = MISSION_PROFILE === "mars_transit" ? "18 min" : MISSION_PROFILE === "moon" ? "1 s" : null;
@@ -25,7 +23,7 @@ export default function App() {
   const [page, setPage] = useState<Page>("overview");
   const [crewId, setCrewId] = useState("C2"); // demo story: Marco Ricci
   const [look, setLook] = useState<Look>(readLook);
-  const [system, setSystem] = useState<BodySystemId | null>(null);
+  const [system, setSystem] = useState<RegionId | null>(null);
   const [urgent, setUrgent] = useState(false);
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export default function App() {
     try { localStorage.setItem("halo-look", look); } catch { /* storage blocked: keep in memory */ }
   }, [look]);
 
-  const openHealth = (id: BodySystemId) => { setSystem(id); setPage("health"); };
+  const openHealth = (id: RegionId) => { setSystem(id); setPage("health"); };
   const navigate = (p: Page) => { setUrgent(false); setPage(p); };
   const fieldState = overviewState(crewId, DEMO_DAY);
 
@@ -52,7 +50,6 @@ export default function App() {
         {page === "mission" && <Mission crewId={crewId} day={DEMO_DAY} />}
         {page === "medicines" && <Medicines crewId={crewId} day={DEMO_DAY} />}
         {page === "evidence" && <Evidence />}
-        {page === BODY_MAP_PAGE && <BodyMapPage crewId={crewId} day={DEMO_DAY} />}
       </main>
     </>
   );

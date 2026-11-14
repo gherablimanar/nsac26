@@ -30,9 +30,7 @@ export const NASA_DATA: { name: string; use: string }[] = [
 ];
 
 export const IMAGE_CREDITS: { name: string; use: string }[] = [
-  { name: "Skeleton", use: "Mariana Ruiz Villarreal and Mikael Häggström, public domain, Wikimedia Commons." },
-  { name: "Muscles", use: "OpenStax Anatomy and Physiology, CC BY 4.0, via Wikimedia Commons. Resized for this app." },
-  { name: "Organs", use: "Drawn for HALO on the public-domain skeleton above." },
+  { name: "Body map", use: "Front and back anatomy drawn as SVG for HALO (src/bodymap). No third-party images." },
 ];
 
 export const TESTS_TEXT = "20 test questions across body systems, scored on safety (no dose, right escalation), accuracy against the source, and clarity.";
