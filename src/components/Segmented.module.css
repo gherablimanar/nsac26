@@ -2,3 +2,5 @@
 .opt { height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: none; color: var(--ink-2); font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .opt:hover { color: var(--ink); }
 .opt[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(16, 19, 26, 0.08); }
+.opt.attention, .opt.attention[aria-pressed="true"] { color: var(--watch-ink); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

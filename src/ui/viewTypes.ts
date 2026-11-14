@@ -16,6 +16,7 @@ export type PriorityRisk = {
   eventLabel: string;
   otherRisks: string[];
   plan: PlanStep[]; // the to-do that answers this risk, in order
+  systemIds: BodySystemId[]; // body systems this risk covers
 };
 
 export type PlanStep = { id: string; label: string; when: string; cta: string };

@@ -1,6 +1,6 @@
 import { BookOpen } from "@phosphor-icons/react";
 import card from "../components/Card.module.css";
-import { DATA_ROWS, NASA_DATA, RULES, TESTS_TEXT } from "../ui/evidenceData.ts";
+import { DATA_ROWS, NASA_DATA, RULES, TESTS_TEXT, IMAGE_CREDITS } from "../ui/evidenceData.ts";
 import s from "./Evidence.module.css";
 
 type Props = Record<string, never>;
@@ -50,6 +50,14 @@ export function Evidence(_props: Props) {
               <div className={card.head}><h2 id="nasa-h">NASA data we use</h2></div>
               <ul className={s.list}>
                 {NASA_DATA.map((n) => (
+                  <li key={n.name}><b>{n.name}</b><span>{n.use}</span></li>
+                ))}
+              </ul>
+            </section>
+            <section className={card.card} aria-labelledby="img-h">
+              <div className={card.head}><h2 id="img-h">Body map images</h2></div>
+              <ul className={s.list}>
+                {IMAGE_CREDITS.map((n) => (
                   <li key={n.name}><b>{n.name}</b><span>{n.use}</span></li>
                 ))}
               </ul>

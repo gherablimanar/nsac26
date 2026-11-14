@@ -38,3 +38,4 @@
 .others { margin: 34px 0 20px; font-size: 14px; color: var(--ink-2); }
 .below { display: grid; grid-template-columns: 1fr 1.1fr 1.25fr; gap: 16px; }
 @media (max-width: 1279px) { .below { grid-template-columns: 1fr 1fr; } }
+.others b { color: var(--watch-ink); font-weight: 500; }

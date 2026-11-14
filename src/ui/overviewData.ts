@@ -19,6 +19,7 @@ const RISKS: Record<string, PriorityRisk> = {
     eventDay: 55,
     eventLabel: "intake dropped",
     otherRisks: ["cognitive readiness", "bone and muscle loss", "fluid shift", "solar storm"],
+    systemIds: ["kidneys"],
     plan: [
       { id: "water1", label: "Drink 250 ml", when: "Now", cta: "I drank 250 ml" },
       { id: "water2", label: "Drink another 250 ml", when: "Before 16:00", cta: "I drank another 250 ml" },
